@@ -11,8 +11,8 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update  # Crée/met à jour les tables automatiquement
-    show-sql: true      # Affiche les requêtes SQL en console (dev)
+      ddl-auto: update  # CrÃ©e/met Ã  jour les tables automatiquement
+    show-sql: true      # Affiche les requÃªtes SQL en console (dev)
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
