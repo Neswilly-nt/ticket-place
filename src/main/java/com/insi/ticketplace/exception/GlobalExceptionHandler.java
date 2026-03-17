@@ -10,6 +10,7 @@ import java.util.*;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
     // Gère nos exceptions métier personnalisées
     @ExceptionHandler(AppException.class)
     public ResponseEntity<Map<String, Object>> handleAppException(AppException ex) {
