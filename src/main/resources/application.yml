@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: ticket-place
+
+  # Configuration BDD
+  datasource:
+    url: jdbc:mysql://localhost:3306/ticket_place_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update  # Crée/met à jour les tables automatiquement
+    show-sql: true      # Affiche les requêtes SQL en console (dev)
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+
+  # Jackson : format des dates en JSON
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: UTC
+
+# Configuration du serveur
+server:
+  port: 8080
+  error:
+    include-message: always # Affiche les messages d'erreur
+    include-binding-errors: always
+    include-stacktrace: never
+
+# Configuration JWT
+app:
+  jwt:
+    secret: ${JWT_SECRET:ticket-place-secret-key-must-be-at-least-32-chars-long}
+    expiration: 86400000   # 24 heures en millisecondes
+
+# Logs
+logging:
+  level:
+    com.insi.ticketplace: DEBUG
+    org.springframework.security: DEBUG
