@@ -1,9 +1,10 @@
 package com.insi.ticketplace.controller;
 
+import com.insi.ticketplace.dto.request.LoginRequest;
 import com.insi.ticketplace.dto.request.RegisterRequest;
 import com.insi.ticketplace.dto.response.ApiResponse;
-import com.insi.ticketplace.dto.response.UserResponse;
-import com.insi.ticketplace.service.UserService;
+import com.insi.ticketplace.dto.response.AuthResponse;
+import com.insi.ticketplace.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,20 +17,24 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class AuthController {
 
-    private final UserService userService;
+    private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<UserResponse>> registerUser(
+    public ResponseEntity<ApiResponse<AuthResponse>> register(
             @Valid @RequestBody RegisterRequest request) {
 
-        UserResponse userResponse = userService.registerUser(request);
+        AuthResponse authResponse = authService.register(request);
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(ApiResponse.<UserResponse>builder()
-                        .success(true)
-                        .message("Utilisateur enregistré avec succès")
-                        .data(userResponse)
-                        .build());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Inscription réussie", authResponse));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<AuthResponse>> login(
+            @Valid @RequestBody LoginRequest request) {
+
+        AuthResponse authResponse = authService.login(request);
+
+        return ResponseEntity.ok(ApiResponse.success("Connexion réussie", authResponse));
     }
 }

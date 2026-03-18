@@ -1,29 +1,39 @@
 package com.insi.ticketplace.config;
 
+import com.insi.ticketplace.security.JwtAuthFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@EnableWebSecurity
+@EnableMethodSecurity          // Active @PreAuthorize sur les controllers
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    /**
-     * Encodeur de mots de passe BCrypt.
-     * Placé ici car c'est une configuration de sécurité.
-     */
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    private final JwtAuthFilter jwtAuthFilter;
+    private final UserDetailsService userDetailsService;
 
     /**
-     * Configuration principale de Spring Security.
-     * Pour l'instant : tout est autorisé (on ajoutera JWT plus tard).
+     * Règles de sécurité HTTP :
+     * - Désactive CSRF (inutile pour une API REST stateless)
+     * - Pas de session (JWT = stateless)
+     * - Routes publiques vs protégées
+     * - Ajoute le filtre JWT avant le filtre d'authentification standard
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -33,10 +43,43 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()  // endpoints publics
+                        // Routes publiques — pas besoin de token
+                        .requestMatchers("/api/auth/**").permitAll()
+                        // Tout le reste nécessite un token valide
                         .anyRequest().authenticated()
-                );
+                )
+                .authenticationProvider(authenticationProvider())
+                // Ajouter JwtAuthFilter AVANT le filtre standard de Spring Security
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    /**
+     * Configure comment Spring Security authentifie un utilisateur :
+     * - Utilise notre CustomUserDetailsService pour charger l'user
+     * - Utilise BCrypt pour vérifier le mot de passe
+     */
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
+    }
+
+    /**
+     * AuthenticationManager — nécessaire pour la connexion (login).
+     * Spring Boot le gère automatiquement, on l'expose juste comme Bean.
+     */
+    @Bean
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }
