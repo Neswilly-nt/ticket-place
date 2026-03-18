@@ -4,7 +4,7 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 
 @Data
-public class RegistrationRequest {
+public class RegisterRequest {
     
     @NotBlank(message = "Le prénom est requis")
     private String firstName;
