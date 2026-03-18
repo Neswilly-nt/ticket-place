@@ -2,14 +2,16 @@
 
 ## Authentication Endpoints
 
+---
+
 ### POST /api/auth/register
-Register a new user in the system.
+Inscription d'un nouvel utilisateur. Retourne un token JWT utilisable immédiatement.
 
 **Request Body:**
 ```json
 {
   "firstName": "John",
-  "lastName": "Doe", 
+  "lastName": "Doe",
   "email": "john.doe@example.com",
   "password": "password123"
 }
@@ -19,57 +21,73 @@ Register a new user in the system.
 ```json
 {
   "success": true,
-  "message": "Utilisateur enregistré avec succès",
+  "message": "Inscription réussie",
   "data": {
-    "id": 1,
+    "token": "eyJhbGciOiJIUzI1NiJ9...",
+    "email": "john.doe@example.com",
     "firstName": "John",
     "lastName": "Doe",
-    "email": "john.doe@example.com",
-    "role": "USER",
-    "enabled": true,
-    "createdAt": "2026-03-18T10:17:00",
-    "updatedAt": null
+    "role": "USER"
   },
   "timestamp": "2026-03-18T10:17:00"
 }
 ```
 
-**Error Responses:**
+---
 
-- **400 Bad Request** - Validation errors
+### POST /api/auth/login
+Connexion d'un utilisateur existant. Retourne un token JWT.
+
+**Request Body:**
 ```json
 {
-  "success": false,
-  "message": "Validation failed",
+  "email": "john.doe@example.com",
+  "password": "password123"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Connexion réussie",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiJ9...",
+    "email": "john.doe@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "role": "USER"
+  },
   "timestamp": "2026-03-18T10:17:00"
 }
 ```
 
-- **409 Conflict** - Email already exists
-```json
-{
-  "success": false,
-  "message": "Cet email est déjà utilisé",
-  "timestamp": "2026-03-18T10:17:00"
-}
+---
+
+### Utiliser le token JWT
+
+Toutes les routes protégées nécessitent ce header :
 ```
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+```
+
+---
 
 ## Validation Rules
 
-- `firstName`: Required, not blank
-- `lastName`: Required, not blank  
-- `email`: Required, valid email format, unique
-- `password`: Required, minimum 6 characters
+| Champ       | Règle                              |
+|-------------|------------------------------------|
+| firstName   | Obligatoire, non vide              |
+| lastName    | Obligatoire, non vide              |
+| email       | Obligatoire, format email, unique  |
+| password    | Obligatoire, minimum 8 caractères  |
 
-## Usage Example with curl
+---
 
-```bash
-curl -X POST http://localhost:8080/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "firstName": "John",
-    "lastName": "Doe",
-    "email": "john.doe@example.com", 
-    "password": "password123"
-  }'
-```
+## Error Responses
+
+| Code | Cas                        | Message                         |
+|------|----------------------------|---------------------------------|
+| 400  | Champ invalide ou manquant | Détail par champ                |
+| 401  | Mauvais mot de passe       | "Email ou mot de passe incorrect"|
+| 409  | Email déjà utilisé         | "Email déjà utilisé"            |
