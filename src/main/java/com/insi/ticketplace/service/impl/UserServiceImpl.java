@@ -22,7 +22,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public UserResponse register(RegisterRequest request) {
+    public UserResponse registerUser(RegisterRequest request) {
         // Vérifier si l'email existe déjà
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new AppException("Email déjà utilisé", HttpStatus.CONFLICT);
