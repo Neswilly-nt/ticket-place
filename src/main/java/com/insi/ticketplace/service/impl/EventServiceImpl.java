@@ -115,6 +115,12 @@ public class EventServiceImpl implements EventService {
     public EventResponse cancel(Long id, String organizerEmail) {
         Event event = getEventAndCheckOwnership(id, organizerEmail);
 
+        if (event.getStatus() == EventStatus.CANCELLED) {
+            throw new AppException(
+                    "Cet événement est déjà annulé",
+                    HttpStatus.BAD_REQUEST);
+        }
+
         if (event.getStatus() == EventStatus.COMPLETED) {
             throw new AppException(
                     "Un événement terminé ne peut pas être annulé",
