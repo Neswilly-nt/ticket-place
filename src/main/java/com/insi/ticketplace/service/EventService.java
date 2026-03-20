@@ -18,4 +18,9 @@ public interface EventService {
     EventResponse publish(Long id, String organizerEmail);
     EventResponse cancel(Long id, String organizerEmail);
     void delete(Long id, String organizerEmail);
+    List<EventResponse> filter(EventStatus status,
+                               EventCategory category,
+                               String userEmail,
+                               boolean isAdmin,
+                               boolean isOrganizer);
 }

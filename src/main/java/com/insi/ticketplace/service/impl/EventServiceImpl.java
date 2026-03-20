@@ -191,4 +191,47 @@ public class EventServiceImpl implements EventService {
                 .createdAt(event.getCreatedAt())
                 .build();
     }
+
+    @Override
+    public List<EventResponse> filter(EventStatus status,
+                                      EventCategory category,
+                                      String userEmail,
+                                      boolean isAdmin,
+                                      boolean isOrganizer) {
+        /**
+         * Règles métier centralisées ici dans le Service :
+         *
+         * ADMIN      → filtre libre sur tous les événements
+         * ORGANIZER  → filtre sur SES événements uniquement
+         * USER       → voit seulement les PUBLISHED
+         */
+
+        if (isAdmin) {
+            // Admin — aucune restriction
+            return eventRepository
+                    .findByStatusAndCategory(status, category)
+                    .stream().map(this::toResponse).toList();
+        }
+
+        if (isOrganizer) {
+            // Organizer — seulement ses propres événements
+            User organizer = userRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new AppException(
+                            "Utilisateur introuvable", HttpStatus.NOT_FOUND));
+
+            return eventRepository
+                    .findByStatusAndCategory(status, category)
+                    .stream()
+                    // Filtre supplémentaire : garder seulement ses événements
+                    .filter(e -> e.getOrganizer().getId()
+                            .equals(organizer.getId()))
+                    .map(this::toResponse)
+                    .toList();
+        }
+
+        // USER ou non connecté — force PUBLISHED
+        return eventRepository
+                .findByStatusAndCategory(EventStatus.PUBLISHED, category)
+                .stream().map(this::toResponse).toList();
+    }
 }
