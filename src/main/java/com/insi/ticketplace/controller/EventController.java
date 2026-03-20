@@ -141,4 +141,32 @@ public class EventController {
         return ResponseEntity.ok(
                 ApiResponse.success("Événement supprimé", null));
     }
+
+    @GetMapping("/filter")
+    public ResponseEntity<ApiResponse<List<EventResponse>>> filter(
+            @RequestParam(required = false) EventStatus status,
+            @RequestParam(required = false) EventCategory category,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        // Le Controller extrait juste les rôles et délègue tout au Service
+        boolean isAdmin = userDetails != null &&
+                userDetails.getAuthorities().stream()
+                        .anyMatch(a -> a.getAuthority()
+                                .equals("ROLE_ADMIN"));
+
+        boolean isOrganizer = userDetails != null &&
+                userDetails.getAuthorities().stream()
+                        .anyMatch(a -> a.getAuthority()
+                                .equals("ROLE_ORGANIZER"));
+
+        String userEmail = userDetails != null
+                ? userDetails.getUsername() : null;
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Événements filtrés",
+                        eventService.filter(
+                                status, category,
+                                userEmail, isAdmin, isOrganizer)));
+    }
 }
