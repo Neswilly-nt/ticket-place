@@ -4,6 +4,7 @@ import com.insi.ticketplace.security.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -28,13 +29,6 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
 
-    /**
-     * Règles de sécurité HTTP :
-     * - Désactive CSRF (inutile pour une API REST stateless)
-     * - Pas de session (JWT = stateless)
-     * - Routes publiques vs protégées
-     * - Ajoute le filtre JWT avant le filtre d'authentification standard
-     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -45,6 +39,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Routes publiques — pas besoin de token
                         .requestMatchers("/api/auth/**").permitAll()
+
+                        // Routes publiques — lecture des événements
+                        // HttpMethod.GET = seulement les requêtes GET sont publiques
+                        // POST/PUT/DELETE restent protégées
+                        .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
+
                         // Tout le reste nécessite un token valide
                         .anyRequest().authenticated()
                 )
