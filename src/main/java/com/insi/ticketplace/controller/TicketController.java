@@ -14,6 +14,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/tickets")
@@ -90,5 +91,18 @@ public class TicketController {
                 "Billets de l'événement",
                 ticketService.getTicketsByEvent(
                         eventId, userDetails.getUsername())));
+    }
+
+    @GetMapping("/event/{eventId}/stats")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ORGANIZER')")
+    public ResponseEntity<ApiResponse<Map<String, Long>>> getEventTicketStats(
+            @PathVariable Long eventId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Stats billets événement " + eventId,
+                        ticketService.getEventTicketStats(
+                                eventId, userDetails.getUsername())));
     }
 }

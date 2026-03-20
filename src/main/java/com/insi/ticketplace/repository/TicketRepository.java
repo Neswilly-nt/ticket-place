@@ -67,6 +67,9 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
             "ORDER BY ticketCount DESC")
     List<Object[]> findTopEventsByTicketsSold();
 
+    // Compte tous les billets d'un événement (tous statuts confondus)
+    long countByEventId(Long eventId);
+
     // Compter les billets vendus pour un événement
     long countByEventIdAndStatus(Long eventId, TicketStatus status);
 }

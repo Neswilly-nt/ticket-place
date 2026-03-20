@@ -16,6 +16,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -265,5 +267,38 @@ public class TicketServiceImpl implements TicketService {
                 .qrCodeImage(qrCodeImage)
                 .reservedAt(ticket.getReservedAt())
                 .build();
+    }
+    /**
+     * Stats détaillées des billets d'un événement.
+     * Utile pour l'organisateur qui veut savoir :
+     * combien de billets sont RESERVED, PAID, USED, CANCELLED
+     * pour son événement.
+     */
+    @Override
+    public Map<String, Long> getEventTicketStats(Long eventId,
+                                                 String userEmail) {
+        // Vérifie que l'événement existe et appartient à cet organisateur
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new AppException(
+                        "Événement introuvable", HttpStatus.NOT_FOUND));
+
+        if (!event.getOrganizer().getEmail().equals(userEmail)) {
+            throw new AppException(
+                    "Accès non autorisé", HttpStatus.FORBIDDEN);
+        }
+
+        Map<String, Long> stats = new LinkedHashMap<>();
+        stats.put("RESERVED", ticketRepository
+                .countByEventIdAndStatus(eventId, TicketStatus.RESERVED));
+        stats.put("PAID",     ticketRepository
+                .countByEventIdAndStatus(eventId, TicketStatus.PAID));
+        stats.put("USED",     ticketRepository
+                .countByEventIdAndStatus(eventId, TicketStatus.USED));
+        stats.put("CANCELLED",ticketRepository
+                .countByEventIdAndStatus(eventId, TicketStatus.CANCELLED));
+        stats.put("TOTAL",    ticketRepository
+                .countByEventId(eventId));
+
+        return stats;
     }
 }
