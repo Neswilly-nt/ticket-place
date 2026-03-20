@@ -40,4 +40,10 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             "(:category IS NULL OR e.category = :category)")
     List<Event> findByStatusAndCategory(EventStatus status,
                                         EventCategory category);
+
+    /**
+     * Compte les événements par statut.
+     * Spring génère : SELECT COUNT(*) FROM events WHERE status = ?
+     */
+    long countByStatus(EventStatus status);
 }
