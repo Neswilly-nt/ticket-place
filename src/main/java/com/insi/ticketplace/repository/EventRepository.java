@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -24,6 +25,10 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     // Recherche par titre (contient le mot, insensible à la casse)
     // %keyword% = "contient" en SQL
     List<Event> findByTitleContainingIgnoreCase(String keyword);
+
+    // Trouve tous les événements PUBLISHED dont la date est passée
+    List<Event> findByStatusAndEventDateBefore(EventStatus status,
+                                               LocalDateTime date);
 
     /**
      * Requête JPQL personnalisée — filtre par statut ET catégorie.
