@@ -75,7 +75,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventResponse> getAll() {
-        return eventRepository.findAll()
+        return eventRepository.findByStatus(EventStatus.PUBLISHED)
                 .stream().map(this::toResponse).toList();
     }
 
