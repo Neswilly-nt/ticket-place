@@ -4,6 +4,10 @@ import com.insi.ticketplace.dto.request.TicketRequest;
 import com.insi.ticketplace.dto.response.ApiResponse;
 import com.insi.ticketplace.dto.response.TicketResponse;
 import com.insi.ticketplace.service.TicketService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +20,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+@Tag(name = "Billets",
+        description = "Réservation, paiement, annulation et vérification des billets")
 @RestController
 @RequestMapping("/api/tickets")
 @RequiredArgsConstructor
@@ -23,7 +29,8 @@ public class TicketController {
 
     private final TicketService ticketService;
 
-    // Réserver un billet — tout utilisateur connecté
+    @Operation(summary = "Réserver un ou plusieurs billets",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping
     public ResponseEntity<ApiResponse<List<TicketResponse>>> reserve(
             @Valid @RequestBody TicketRequest request,
@@ -37,7 +44,9 @@ public class TicketController {
                         tickets.size() + " billet(s) réservé(s)", tickets));
     }
 
-    // Payer un billet
+    @Operation(summary = "Payer un billet (RESERVED → PAID)",
+            description = "Génère le QR Code une fois payé",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @PatchMapping("/{id}/pay")
     public ResponseEntity<ApiResponse<TicketResponse>> pay(
             @PathVariable Long id,
@@ -59,7 +68,9 @@ public class TicketController {
                 ticketService.cancel(id, userDetails.getUsername())));
     }
 
-    // Mes billets — historique de l'utilisateur connecté
+    @Operation(summary = "Mes billets",
+            description = "Historique de tous les billets de l'utilisateur connecté",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping("/my")
     public ResponseEntity<ApiResponse<List<TicketResponse>>> getMyTickets(
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -69,10 +80,13 @@ public class TicketController {
                 ticketService.getMyTickets(userDetails.getUsername())));
     }
 
-    // Vérifier un billet au scan — ADMIN ou ORGANIZER
+    @Operation(summary = "Vérifier un billet au scan QR",
+            description = "Marque le billet comme USED — réservé aux ADMIN et ORGANIZER",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping("/verify/{qrCode}")
     @PreAuthorize("hasAnyRole('ADMIN', 'ORGANIZER')")
     public ResponseEntity<ApiResponse<TicketResponse>> verify(
+            @Parameter(description = "Code UUID du QR Code scanné")
             @PathVariable String qrCode) {
 
         return ResponseEntity.ok(ApiResponse.success(

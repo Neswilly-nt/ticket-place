@@ -22,7 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity          // Active @PreAuthorize sur les controllers
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -39,12 +39,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Routes publiques — pas besoin de token
                         .requestMatchers("/api/auth/**").permitAll()
-
-                        // Routes publiques — lecture des événements
-                        // HttpMethod.GET = seulement les requêtes GET sont publiques
-                        // POST/PUT/DELETE restent protégées
                         .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
-
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "/v3/api-docs"
+                        ).permitAll()
                         // Tout le reste nécessite un token valide
                         .anyRequest().authenticated()
                 )

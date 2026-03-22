@@ -42,3 +42,13 @@ logging:
   level:
     com.insi.ticketplace: DEBUG
     org.springframework.security: DEBUG
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html        # URL d'accès
+    tags-sorter: alpha            # Trie les groupes alphabétiquement
+    operations-sorter: alpha      # Trie les endpoints alphabétiquement
+    display-request-duration: true # Affiche le temps de réponse
+  api-docs:
+    path: /v3/api-docs            # URL du JSON OpenAPI brut
+  show-actuator: false

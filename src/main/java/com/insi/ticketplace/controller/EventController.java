@@ -6,6 +6,10 @@ import com.insi.ticketplace.dto.response.EventResponse;
 import com.insi.ticketplace.entity.EventCategory;
 import com.insi.ticketplace.entity.EventStatus;
 import com.insi.ticketplace.service.EventService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Événements",
+        description = "Gestion des événements — création, modification, publication")
 @RestController
 @RequestMapping("/api/events")
 @RequiredArgsConstructor
@@ -32,7 +38,9 @@ public class EventController {
      * pour savoir QUI fait la requête.
      */
 
-    // Créer un événement — ADMIN ou ORGANIZER uniquement
+    @Operation(summary = "Créer un événement",
+            description = "Réservé aux ADMIN et ORGANIZER",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'ORGANIZER')")
     public ResponseEntity<ApiResponse<EventResponse>> createEvent(
@@ -46,7 +54,8 @@ public class EventController {
                 .body(ApiResponse.success("Événement créé", response));
     }
 
-    // Lister tous les événements — tout le monde (même non connecté)
+    @Operation(summary = "Lister les événements publiés",
+            description = "Accessible sans token — retourne seulement les PUBLISHED")
     @GetMapping
     public ResponseEntity<ApiResponse<List<EventResponse>>> getAllEvents() {
         return ResponseEntity.ok(
@@ -104,7 +113,8 @@ public class EventController {
                                 userDetails.getUsername())));
     }
 
-    // Publier un événement (DRAFT → PUBLISHED)
+    @Operation(summary = "Publier un événement (DRAFT → PUBLISHED)",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @PatchMapping("/{id}/publish")
     @PreAuthorize("hasAnyRole('ADMIN', 'ORGANIZER')")
     public ResponseEntity<ApiResponse<EventResponse>> publishEvent(
@@ -142,9 +152,18 @@ public class EventController {
                 ApiResponse.success("Événement supprimé", null));
     }
 
+    @Operation(summary = "Filtrer les événements",
+            description = """
+                   Filtre adapté selon le rôle :
+                   - Sans token / USER → seulement les PUBLISHED
+                   - ORGANIZER → ses événements tous statuts
+                   - ADMIN → tout sans restriction
+                   """)
     @GetMapping("/filter")
     public ResponseEntity<ApiResponse<List<EventResponse>>> filter(
+            @Parameter(description = "Statut de l'événement (optionnel)")
             @RequestParam(required = false) EventStatus status,
+            @Parameter(description = "Catégorie de l'événement (optionnel)")
             @RequestParam(required = false) EventCategory category,
             @AuthenticationPrincipal UserDetails userDetails) {
 
