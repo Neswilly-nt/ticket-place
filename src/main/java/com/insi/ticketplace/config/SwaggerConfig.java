@@ -45,7 +45,7 @@ public class SwaggerConfig {
                         .version("1.0.0")
                         .contact(new Contact()
                                 .name("L2 GL INSI")
-                                .email("contact@ticketplace.com")))
+                                .email("jeannoneswilly@gmail.com")))
 
                 // Déclarer le schéma de sécurité JWT
                 // Cela ajoute le bouton "Authorize" dans Swagger UI

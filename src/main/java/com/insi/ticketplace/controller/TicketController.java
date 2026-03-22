@@ -57,7 +57,9 @@ public class TicketController {
                 ticketService.pay(id, userDetails.getUsername())));
     }
 
-    // Annuler un billet
+    @Operation(summary = "Annuler un billet",
+            description = "Impossible si déjà USED ou CANCELLED",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @PatchMapping("/{id}/cancel")
     public ResponseEntity<ApiResponse<TicketResponse>> cancel(
             @PathVariable Long id,
@@ -94,7 +96,9 @@ public class TicketController {
                 ticketService.verify(qrCode)));
     }
 
-    // Billets d'un événement — pour l'organisateur
+    @Operation(summary = "Billets d'un événement",
+            description = "Réservé aux ADMIN et ORGANIZER propriétaire",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping("/event/{eventId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'ORGANIZER')")
     public ResponseEntity<ApiResponse<List<TicketResponse>>> getByEvent(
@@ -107,6 +111,9 @@ public class TicketController {
                         eventId, userDetails.getUsername())));
     }
 
+    @Operation(summary = "Statistiques des billets d'un événement",
+            description = "Compte RESERVED, PAID, USED, CANCELLED",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping("/event/{eventId}/stats")
     @PreAuthorize("hasAnyRole('ADMIN', 'ORGANIZER')")
     public ResponseEntity<ApiResponse<Map<String, Long>>> getEventTicketStats(

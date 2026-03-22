@@ -63,7 +63,8 @@ public class EventController {
                         eventService.getAll()));
     }
 
-    // Détail d'un événement par ID
+    @Operation(summary = "Détail d'un événement par ID",
+            description = "Accessible sans token")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<EventResponse>> getEventById(
             @PathVariable Long id) {
@@ -72,7 +73,8 @@ public class EventController {
                         eventService.getById(id)));
     }
 
-    // Recherche par mot-clé dans le titre
+    @Operation(summary = "Rechercher des événements par mot-clé",
+            description = "Recherche dans le titre — accessible sans token")
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<List<EventResponse>>> search(
             @RequestParam String keyword) {
@@ -81,7 +83,8 @@ public class EventController {
                         eventService.search(keyword)));
     }
 
-    // Filtrer par statut
+    @Operation(summary = "Filtrer par statut",
+            description = "Ex: PUBLISHED, DRAFT, CANCELLED — ADMIN recommandé")
     @GetMapping("/status/{status}")
     public ResponseEntity<ApiResponse<List<EventResponse>>> getByStatus(
             @PathVariable EventStatus status) {
@@ -90,7 +93,8 @@ public class EventController {
                         eventService.getByStatus(status)));
     }
 
-    // Filtrer par catégorie
+    @Operation(summary = "Filtrer par catégorie",
+            description = "Ex: CONCERT, CONFERENCE, THEATRE")
     @GetMapping("/category/{category}")
     public ResponseEntity<ApiResponse<List<EventResponse>>> getByCategory(
             @PathVariable EventCategory category) {
@@ -99,7 +103,9 @@ public class EventController {
                         eventService.getByCategory(category)));
     }
 
-    // Modifier un événement
+    @Operation(summary = "Modifier un événement",
+            description = "Seulement si status = DRAFT",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'ORGANIZER')")
     public ResponseEntity<ApiResponse<EventResponse>> updateEvent(
@@ -127,7 +133,9 @@ public class EventController {
                                 userDetails.getUsername())));
     }
 
-    // Annuler un événement
+    @Operation(summary = "Annuler un événement",
+            description = "Impossible si déjà CANCELLED ou COMPLETED",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @PatchMapping("/{id}/cancel")
     @PreAuthorize("hasAnyRole('ADMIN', 'ORGANIZER')")
     public ResponseEntity<ApiResponse<EventResponse>> cancelEvent(
@@ -140,7 +148,9 @@ public class EventController {
                                 userDetails.getUsername())));
     }
 
-    // Supprimer un événement
+    @Operation(summary = "Supprimer un événement",
+            description = "Seulement si status = DRAFT",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'ORGANIZER')")
     public ResponseEntity<ApiResponse<Void>> deleteEvent(
