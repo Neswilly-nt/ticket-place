@@ -37,7 +37,7 @@ export default function TicketsPage() {
   const [tickets, setTickets] = useState<TicketResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [actionLoading, setActionLoading] = useState<Record<number, "pay" | "cancel" | null>>({});
+  const [actionLoading, setActionLoading] = useState<Record<number, "cancel" | null>>({});
   const [expandedQr, setExpandedQr] = useState<number | null>(null);
 
   useEffect(() => {
@@ -52,20 +52,6 @@ export default function TicketsPage() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [initialized, isAuthenticated, router]);
-
-  const handlePay = async (id: number) => {
-    setActionLoading((prev) => ({ ...prev, [id]: "pay" }));
-    setError("");
-    try {
-      const res = await ticketsService.pay(id);
-      setTickets((prev) => prev.map((t) => (t.id === id ? res.data : t)));
-      setExpandedQr(id);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Erreur de paiement");
-    } finally {
-      setActionLoading((prev) => ({ ...prev, [id]: null }));
-    }
-  };
 
   const handleCancel = async (id: number) => {
     if (!confirm("Annuler ce billet ? Cette action est irréversible.")) return;
@@ -156,15 +142,12 @@ export default function TicketsPage() {
 
                     <div className="flex items-center gap-2 shrink-0">
                       {ticket.status === "RESERVED" && (
-                        <button
-                          onClick={() => handlePay(ticket.id)}
-                          disabled={isActing}
-                          className="rounded-lg bg-green-600 hover:bg-green-700 disabled:opacity-60 px-4 py-1.5 text-xs font-semibold text-white transition-colors flex items-center gap-1.5"
+                        <Link
+                          href={`/tickets/${ticket.id}/pay`}
+                          className="rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-1.5 text-xs font-semibold text-white transition-colors flex items-center gap-1.5"
                         >
-                          {actionLoading[ticket.id] === "pay" ? (
-                            <><span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />Paiement…</>
-                          ) : "💳 Payer"}
-                        </button>
+                          💳 Payer
+                        </Link>
                       )}
                       {showQr && (
                         <button
