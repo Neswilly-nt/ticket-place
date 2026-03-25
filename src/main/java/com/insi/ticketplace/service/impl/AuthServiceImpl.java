@@ -10,6 +10,7 @@ import com.insi.ticketplace.repository.UserRepository;
 import com.insi.ticketplace.security.JwtService;
 import com.insi.ticketplace.service.AuthService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -17,6 +18,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -33,12 +35,16 @@ public class AuthServiceImpl implements AuthService {
             throw new AppException("Email déjà utilisé", HttpStatus.CONFLICT);
         }
 
+        Role role = request.isWantsToBeOrganizer()
+                ? Role.ORGANIZER
+                : Role.USER;
+
         User user = User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER)
+                .role(role)
                 .build();
 
         User saved = userRepository.save(user);
