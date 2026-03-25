@@ -3,8 +3,22 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { eventsService } from "@/lib/services/events";
-import { EventCategory, EventResponse } from "@/types";
+import { EventCategory, EventResponse, EventStatus } from "@/types";
 import { useAuth } from "@/context/AuthContext";
+
+const STATUS_LABELS: Record<EventStatus, string> = {
+  DRAFT: "Brouillon",
+  PUBLISHED: "Publié",
+  CANCELLED: "Annulé",
+  COMPLETED: "Terminé",
+};
+
+const STATUS_BADGE: Record<EventStatus, string> = {
+  DRAFT: "bg-zinc-100 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400",
+  PUBLISHED: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+  CANCELLED: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
+  COMPLETED: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
+};
 
 const CATEGORY_LABELS: Record<EventCategory, string> = {
   CONCERT: "Concert",
@@ -36,20 +50,27 @@ function formatDate(dateStr: string) {
 }
 
 export default function EventsPage() {
-  const { isAuthenticated, user } = useAuth();
+  const { hasRole, initialized } = useAuth();
+  const isPrivileged = initialized && hasRole("ADMIN", "ORGANIZER");
+
   const [events, setEvents] = useState<EventResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<EventCategory | "">("");
+  const [statusFilter, setStatusFilter] = useState<EventStatus | "">("PUBLISHED");
 
   useEffect(() => {
-    eventsService
-      .getAll()
+    if (!initialized) return;
+    const status = isPrivileged ? statusFilter : "PUBLISHED";
+    const loader = status
+      ? eventsService.getByStatus(status as EventStatus)
+      : eventsService.getAll();
+    loader
       .then((res) => setEvents(res.data))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [initialized, isPrivileged, statusFilter]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,9 +90,25 @@ export default function EventsPage() {
     setCategoryFilter(cat);
     setLoading(true);
     try {
+      const status = isPrivileged ? statusFilter : "PUBLISHED";
       const res = cat
-        ? await eventsService.getByCategory(cat)
+        ? await eventsService.filter({ category: cat, status: status as EventStatus || undefined })
+        : status
+        ? await eventsService.getByStatus(status as EventStatus)
         : await eventsService.getAll();
+      setEvents(res.data);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erreur de filtrage");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStatusFilter = async (s: EventStatus | "") => {
+    setStatusFilter(s);
+    setLoading(true);
+    try {
+      const res = s ? await eventsService.getByStatus(s) : await eventsService.getAll();
       setEvents(res.data);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erreur de filtrage");
@@ -82,44 +119,6 @@ export default function EventsPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
-      <header className="bg-white dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="text-xl font-bold text-zinc-900 dark:text-white">
-            🎟 Ticket Place
-          </Link>
-          <nav className="flex items-center gap-3">
-            {isAuthenticated ? (
-              <>
-                <span className="text-sm text-zinc-500 dark:text-zinc-400">
-                  {user?.firstName} {user?.lastName}
-                </span>
-                <Link
-                  href="/tickets"
-                  className="text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
-                >
-                  Mes billets
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
-                >
-                  Se connecter
-                </Link>
-                <Link
-                  href="/register"
-                  className="rounded-lg bg-zinc-900 dark:bg-white px-4 py-2 text-sm font-semibold text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors"
-                >
-                  S&apos;inscrire
-                </Link>
-              </>
-            )}
-          </nav>
-        </div>
-      </header>
-
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-white mb-1">
@@ -154,11 +153,22 @@ export default function EventsPage() {
           >
             <option value="">Toutes les catégories</option>
             {(Object.keys(CATEGORY_LABELS) as EventCategory[]).map((cat) => (
-              <option key={cat} value={cat}>
-                {CATEGORY_LABELS[cat]}
-              </option>
+              <option key={cat} value={cat}>{CATEGORY_LABELS[cat]}</option>
             ))}
           </select>
+
+          {isPrivileged && (
+            <select
+              value={statusFilter}
+              onChange={(e) => handleStatusFilter(e.target.value as EventStatus | "")}
+              className="rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-400"
+            >
+              <option value="">Tous les statuts</option>
+              {(Object.keys(STATUS_LABELS) as EventStatus[]).map((s) => (
+                <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+              ))}
+            </select>
+          )}
         </div>
 
         {error && (
@@ -193,12 +203,17 @@ export default function EventsPage() {
                 href={`/events/${event.id}`}
                 className="group block rounded-2xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-5 hover:shadow-md transition-shadow"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <span
-                    className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${CATEGORY_COLORS[event.category]}`}
-                  >
-                    {CATEGORY_LABELS[event.category]}
-                  </span>
+                <div className="flex items-start justify-between gap-2 mb-3 flex-wrap">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${CATEGORY_COLORS[event.category]}`}>
+                      {CATEGORY_LABELS[event.category]}
+                    </span>
+                    {isPrivileged && event.status !== "PUBLISHED" && (
+                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_BADGE[event.status]}`}>
+                        {STATUS_LABELS[event.status]}
+                      </span>
+                    )}
+                  </div>
                   <span className="text-sm font-semibold text-zinc-900 dark:text-white">
                     {event.price === 0 ? "Gratuit" : `${event.price} €`}
                   </span>

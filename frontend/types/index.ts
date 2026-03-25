@@ -83,3 +83,27 @@ export interface TicketRequest {
   eventId: number;
   quantity: number;
 }
+
+export interface EventStatsResponse {
+  eventId: number;
+  eventTitle: string;
+  location: string;
+  ticketsSold: number;
+  availableSeats: number;
+  totalSeats: number;
+  revenue: number;
+  occupancyRate: number;
+}
+
+export interface DashboardResponse {
+  totalUsers: number;
+  totalEvents: number;
+  totalTicketsSold: number;
+  totalTicketsCancelled: number;
+  totalRevenue: number;
+  draftEvents: number;
+  publishedEvents: number;
+  completedEvents: number;
+  cancelledEvents: number;
+  topEvents: EventStatsResponse[];
+}

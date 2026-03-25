@@ -22,6 +22,7 @@ interface AuthContextType {
   login: (data: AuthResponse) => void;
   logout: () => void;
   isAuthenticated: boolean;
+  initialized: boolean;
   hasRole: (...roles: Role[]) => boolean;
 }
 
@@ -29,6 +30,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("auth_user");
@@ -39,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("auth_user");
       }
     }
+    setInitialized(true);
   }, []);
 
   const login = (data: AuthResponse) => {
@@ -51,12 +54,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     localStorage.setItem("token", data.token);
     localStorage.setItem("auth_user", JSON.stringify(authUser));
+    document.cookie = `token=${data.token}; path=/; max-age=86400; SameSite=Lax`;
     setUser(authUser);
   };
 
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("auth_user");
+    document.cookie = "token=; path=/; max-age=0";
     setUser(null);
   };
 
@@ -66,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, login, logout, isAuthenticated: !!user, hasRole }}
+      value={{ user, login, logout, isAuthenticated: !!user, initialized, hasRole }}
     >
       {children}
     </AuthContext.Provider>
