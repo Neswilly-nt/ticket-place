@@ -25,8 +25,6 @@ spring:
         fail-on-unknown-properties: false
         adjust-dates-to-context-time-zone: false
     time-zone: UTC
-    date-format: yyyy-MM-dd'T'HH:mm:ss
-
 
 # Configuration du serveur
 server:
