@@ -14,6 +14,7 @@ export default function RegisterPage() {
     lastName: "",
     email: "",
     password: "",
+    wantsToBeOrganizer: false,
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -106,6 +107,38 @@ export default function RegisterPage() {
               className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 px-4 py-2.5 text-sm text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-400"
               placeholder="Min. 8 caractères"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+              Rôle
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, wantsToBeOrganizer: false })}
+                className={`flex flex-col items-center gap-1.5 rounded-xl border-2 px-4 py-3 text-sm font-medium transition-all ${
+                  !form.wantsToBeOrganizer
+                    ? "border-indigo-600 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-500"
+                    : "border-zinc-200 dark:border-zinc-600 text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-400"
+                }`}
+              >
+                <span className="text-xl">🎟️</span>
+                <span>Participant</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, wantsToBeOrganizer: true })}
+                className={`flex flex-col items-center gap-1.5 rounded-xl border-2 px-4 py-3 text-sm font-medium transition-all ${
+                  form.wantsToBeOrganizer
+                    ? "border-indigo-600 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-500"
+                    : "border-zinc-200 dark:border-zinc-600 text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-400"
+                }`}
+              >
+                <span className="text-xl">🎪</span>
+                <span>Organisateur</span>
+              </button>
+            </div>
           </div>
 
           <button

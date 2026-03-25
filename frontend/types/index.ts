@@ -31,6 +31,7 @@ export interface EventResponse {
   status: EventStatus;
   organizerName: string;
   createdAt: string;
+  imageUrl?: string;
 }
 
 export interface TicketResponse {
@@ -67,6 +68,7 @@ export interface RegisterRequest {
   lastName: string;
   email: string;
   password: string;
+  wantsToBeOrganizer: boolean;
 }
 
 export interface EventRequest {

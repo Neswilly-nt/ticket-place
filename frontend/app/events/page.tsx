@@ -1,10 +1,48 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 import Link from "next/link";
+import Lottie from "lottie-react";
 import { eventsService } from "@/lib/services/events";
 import { EventCategory, EventResponse, EventStatus } from "@/types";
 import { useAuth } from "@/context/AuthContext";
+import successAnimation from "@/assets/animations/lottieflow-ecommerce-14-16-000000-easey.json";
+import searchAnimation from "@/assets/animations/lottieflow-search-08-000000-easey.json";
+
+function Icon({ d }: { d: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="w-4 h-4 shrink-0"
+    >
+      <path d={d} />
+    </svg>
+  );
+}
+
+const ICONS = {
+  events:
+    "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
+  tickets:
+    "M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z",
+  adminDash:
+    "M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z",
+  organizer:
+    "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
+  logout:
+    "M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1",
+  newEvent:
+    "M12 4v16m8-8H4",
+  calendar:
+    "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
+};
 
 const STATUS_LABELS: Record<EventStatus, string> = {
   DRAFT: "Brouillon",
@@ -131,13 +169,18 @@ export default function EventsPage() {
 
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <form onSubmit={handleSearch} className="flex flex-1 gap-2">
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher un événement…"
-              className="flex-1 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-400"
-            />
+            <div className="relative flex-1">
+              <div className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 w-5 h-5" style={{ filter: "brightness(0) invert(63%)" }}>
+                <Lottie animationData={searchAnimation} loop autoplay />
+              </div>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Rechercher un événement…"
+                className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 pl-10 pr-4 py-2.5 text-sm text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-400"
+              />
+            </div>
             <button
               type="submit"
               className="rounded-lg bg-zinc-900 dark:bg-white px-4 py-2.5 text-sm font-medium text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors"
@@ -201,8 +244,20 @@ export default function EventsPage() {
               <Link
                 key={event.id}
                 href={`/events/${event.id}`}
-                className="group block rounded-2xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-5 hover:shadow-md transition-shadow"
+                className="group block rounded-2xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 overflow-hidden hover:shadow-md transition-shadow"
               >
+                {event.imageUrl ? (
+                  <img
+                    src={event.imageUrl}
+                    alt={event.title}
+                    className="w-full h-40 object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-40 bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center text-zinc-300 dark:text-zinc-600 text-4xl">
+                    🎟️
+                  </div>
+                )}
+                <div className="p-5">
                 <div className="flex items-start justify-between gap-2 mb-3 flex-wrap">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${CATEGORY_COLORS[event.category]}`}>
@@ -228,21 +283,24 @@ export default function EventsPage() {
 
                 <div className="space-y-1 text-xs text-zinc-600 dark:text-zinc-400">
                   <div className="flex items-center gap-1">
-                    <span>📅</span>
+                    <Icon d={ICONS.calendar} />
                     <span>{formatDate(event.eventDate)}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <span>📍</span>
+                    <div className="left-2 top-1/2 -translate-y-1/2 w-3 h-3" style={{ filter: "brightness(0) invert(63%)" }}>
+                      <Lottie animationData={successAnimation} loop autoplay />
+                    </div>
                     <span>{event.location}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <span>🎫</span>
+                    <Icon d={ICONS.tickets} />
                     <span>
                       {event.availableSeats} place
                       {event.availableSeats > 1 ? "s" : ""} disponible
                       {event.availableSeats > 1 ? "s" : ""}
                     </span>
                   </div>
+                </div>
                 </div>
               </Link>
             ))}

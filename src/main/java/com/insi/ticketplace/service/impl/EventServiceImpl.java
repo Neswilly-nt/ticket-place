@@ -189,7 +189,15 @@ public class EventServiceImpl implements EventService {
                 .organizerName(event.getOrganizer().getFirstName()
                         + " " + event.getOrganizer().getLastName())
                 .createdAt(event.getCreatedAt())
+                .imageUrl(event.getImageUrl())
                 .build();
+    }
+
+    @Override
+    public EventResponse updateImageUrl(Long id, String imageUrl) {
+        Event event = findEventById(id);
+        event.setImageUrl(imageUrl);
+        return toResponse(eventRepository.save(event));
     }
 
     @Override

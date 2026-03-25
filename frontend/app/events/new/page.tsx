@@ -35,6 +35,8 @@ export default function NewEventPage() {
     price: "",
     category: "OTHER" as EventCategory,
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -43,12 +45,22 @@ export default function NewEventPage() {
     return null;
   }
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setImageFile(file);
+    if (file) {
+      setImagePreview(URL.createObjectURL(file));
+    } else {
+      setImagePreview(null);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      await eventsService.create({
+      const created = await eventsService.create({
         title: form.title,
         description: form.description || undefined,
         eventDate: new Date(form.eventDate).toISOString().slice(0, 19),
@@ -57,6 +69,9 @@ export default function NewEventPage() {
         price: Number(form.price),
         category: form.category,
       });
+      if (imageFile && created.data?.id) {
+        await eventsService.uploadImage(created.data.id, imageFile);
+      }
       router.push("/dashboard/organizer");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erreur lors de la création");
@@ -182,6 +197,44 @@ export default function NewEventPage() {
                   ))}
                 </select>
               </div>
+            </div>
+
+            <div>
+              <label className={LABEL_CLASS}>Image de l&apos;événement</label>
+              <div
+                className="mt-1 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-600 px-6 py-8 cursor-pointer hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors"
+                onClick={() => document.getElementById("event-image-input")?.click()}
+              >
+                {imagePreview ? (
+                  <img
+                    src={imagePreview}
+                    alt="Aperçu"
+                    className="max-h-48 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="text-center">
+                    <p className="text-2xl mb-2">🖼️</p>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400">Cliquez pour choisir une image</p>
+                    <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">PNG, JPG, WEBP — max 10 Mo</p>
+                  </div>
+                )}
+                <input
+                  id="event-image-input"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageChange}
+                />
+              </div>
+              {imageFile && (
+                <button
+                  type="button"
+                  onClick={() => { setImageFile(null); setImagePreview(null); }}
+                  className="mt-2 text-xs text-red-500 hover:underline"
+                >
+                  Supprimer l&apos;image
+                </button>
+              )}
             </div>
 
             <div className="flex gap-3 pt-2">
