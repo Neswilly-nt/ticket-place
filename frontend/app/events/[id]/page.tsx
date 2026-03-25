@@ -132,6 +132,17 @@ export default function EventDetailPage({
           ← Retour aux événements
         </Link>
         <div className="bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+          {event.imageUrl ? (
+            <img
+              src={event.imageUrl}
+              alt={event.title}
+              className="w-full h-64 object-cover"
+            />
+          ) : (
+            <div className="w-full h-48 bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center text-zinc-300 dark:text-zinc-600 text-6xl">
+              🎟️
+            </div>
+          )}
           <div className="p-8">
             <div className="flex items-start justify-between flex-wrap gap-4 mb-6">
               <div>

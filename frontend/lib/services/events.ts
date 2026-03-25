@@ -32,4 +32,7 @@ export const eventsService = {
   cancel: (id: number) => api.patch<EventResponse>(`/events/${id}/cancel`),
 
   delete: (id: number) => api.delete<void>(`/events/${id}`),
+
+  uploadImage: (id: number, file: File) =>
+    api.uploadFile<EventResponse>(`/events/${id}/image`, file),
 };

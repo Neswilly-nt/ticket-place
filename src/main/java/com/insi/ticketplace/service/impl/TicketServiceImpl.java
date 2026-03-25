@@ -63,6 +63,17 @@ public class TicketServiceImpl implements TicketService {
                     HttpStatus.BAD_REQUEST);
         }
 
+        // Vérifier la date limite de réservation
+        if (event.getReservationDeadline() != null &&
+                LocalDateTime.now().isAfter(event.getReservationDeadline())) {
+                throw new AppException(
+                        "Les réservations sont fermées depuis le "
+                                + event.getReservationDeadline()
+                                .format(java.time.format.DateTimeFormatter
+                                        .ofPattern("dd/MM/yyyy à HH:mm")),
+                        HttpStatus.BAD_REQUEST);
+        }
+
         // 4. Vérifier qu'il y a assez de places
         if (event.getAvailableSeats() < request.getQuantity()) {
             throw new AppException(

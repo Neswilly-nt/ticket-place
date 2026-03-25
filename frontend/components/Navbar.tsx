@@ -94,14 +94,16 @@ export default function Navbar() {
           navItem("/events/new", "Créer un événement", ICONS.newEvent)}
 
         {isAuthenticated && (hasRole("ADMIN") || hasRole("ORGANIZER")) && (
-          <p className="text-white/90 text-xs font-semibold uppercase  px-4 pt-5 mb-3">
+          <p className="text-white/90 text-xs font-semibold uppercase px-4 pt-5 mb-3">
             Dashboard
           </p>
         )}
         {isAuthenticated &&
           hasRole("ADMIN") &&
           navItem("/dashboard/admin", "Admin", ICONS.adminDash)}
-        
+        {isAuthenticated &&
+          hasRole("ORGANIZER", "ADMIN") &&
+          navItem("/dashboard/organizer", "Organisateur", ICONS.organizer)}
       </nav>
 
       {/* User section */}

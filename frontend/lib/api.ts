@@ -33,6 +33,22 @@ async function request<T>(
   return json as ApiResponse<T>;
 }
 
+async function uploadFile<T>(path: string, file: File, fieldName = "file"): Promise<ApiResponse<T>> {
+  const token = getToken();
+  const formData = new FormData();
+  formData.append(fieldName, file);
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.message || `HTTP error ${res.status}`);
+  return json as ApiResponse<T>;
+}
+
 export const api = {
   get: <T>(path: string) => request<T>(path, { method: "GET" }),
   post: <T>(path: string, body: unknown) =>
@@ -45,4 +61,6 @@ export const api = {
       body: body ? JSON.stringify(body) : undefined,
     }),
   delete: <T>(path: string) => request<T>(path, { method: "DELETE" }),
+  uploadFile: <T>(path: string, file: File, fieldName?: string) =>
+    uploadFile<T>(path, file, fieldName),
 };

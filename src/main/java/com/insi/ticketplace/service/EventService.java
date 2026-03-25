@@ -23,4 +23,5 @@ public interface EventService {
                                String userEmail,
                                boolean isAdmin,
                                boolean isOrganizer);
+    EventResponse updateImageUrl(Long id, String imageUrl);
 }
