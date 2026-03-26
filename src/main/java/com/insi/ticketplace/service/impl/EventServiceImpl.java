@@ -27,6 +27,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventResponse createEvent(EventRequest request, String organizerEmail) {
 
+        validateReservationDeadline(request);
         // On récupère l'utilisateur connecté depuis son email (extrait du token JWT)
         User organizer = userRepository.findByEmail(organizerEmail)
                 .orElseThrow(() -> new AppException("Utilisateur introuvable",
@@ -43,6 +44,7 @@ public class EventServiceImpl implements EventService {
                 .category(request.getCategory())
                 .status(EventStatus.DRAFT)               // toujours DRAFT à la création
                 .organizer(organizer)
+                .reservationDeadline(request.getReservationDeadline())
                 .build();
 
         return toResponse(eventRepository.save(event));
@@ -53,6 +55,7 @@ public class EventServiceImpl implements EventService {
                                      String organizerEmail) {
         Event event = getEventAndCheckOwnership(id, organizerEmail);
 
+        validateReservationDeadline(request);
         // On ne peut modifier qu'un événement en DRAFT
         if (event.getStatus() != EventStatus.DRAFT) {
             throw new AppException(
@@ -68,6 +71,7 @@ public class EventServiceImpl implements EventService {
         event.setAvailableSeats(request.getTotalSeats());
         event.setPrice(request.getPrice());
         event.setCategory(request.getCategory());
+        event.setReservationDeadline(request.getReservationDeadline());
 
         return toResponse(eventRepository.save(event));
     }
@@ -200,6 +204,7 @@ public class EventServiceImpl implements EventService {
                         + " " + event.getOrganizer().getLastName())
                 .createdAt(event.getCreatedAt())
                 .imageUrl(event.getImageUrl())
+                .reservationDeadline(event.getReservationDeadline())
                 .build();
     }
 
@@ -251,5 +256,19 @@ public class EventServiceImpl implements EventService {
         return eventRepository
                 .findByStatusAndCategory(EventStatus.PUBLISHED, category)
                 .stream().map(this::toResponse).toList();
+    }
+
+    private void validateReservationDeadline(EventRequest request) {
+        if (request.getReservationDeadline() == null) {
+            return; // optionnel — pas de validation si absent
+        }
+
+        if (request.getReservationDeadline()
+                .isAfter(request.getEventDate())) {
+            throw new AppException(
+                    "La date limite de réservation doit être "
+                            + "avant la date de l'événement",
+                    HttpStatus.BAD_REQUEST);
+        }
     }
 }
