@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import collapsedIcon from "@/assets/images/Frame 4.png";
+import expandedLogo from "@/assets/images/Frame 4 (1).png";
 
 function Icon({ d }: { d: string }) {
   return (
@@ -34,9 +37,21 @@ const ICONS = {
     "M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1",
   newEvent:
     "M12 4v16m8-8H4",
+  subscription:
+    "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z",
+  chevronLeft: "M15 18l-6-6 6-6",
+  chevronRight: "M9 18l6-6-6-6",
+  close: "M6 18L18 6M6 6l12 12",
 };
 
-export default function Navbar() {
+interface NavbarProps {
+  isOpen: boolean;
+  isMobileOpen: boolean;
+  onToggle: () => void;
+  onMobileClose: () => void;
+}
+
+export default function Navbar({ isOpen, isMobileOpen, onToggle, onMobileClose }: NavbarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated, user, logout, hasRole } = useAuth();
@@ -52,16 +67,21 @@ export default function Navbar() {
       <Link
         key={href}
         href={href}
-        className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-150 ${
+        title={!isOpen ? label : undefined}
+        className={`flex items-center gap-3 py-3 rounded-2xl text-sm font-medium transition-all duration-150 overflow-hidden ${
+          isOpen ? "px-4" : "px-0 justify-center"
+        } ${
           active
             ? "bg-white text-indigo-700 shadow-md"
             : "text-white/70 hover:text-white hover:bg-white/10"
         }`}
       >
-        <span className={active ? "text-indigo-600" : "text-current"}>
+        <span className={`shrink-0 ${active ? "text-indigo-600" : "text-current"}`}>
           <Icon d={icon} />
         </span>
-        {label}
+        <span className={`whitespace-nowrap transition-all duration-300 ${isOpen ? "opacity-100 w-auto" : "opacity-0 w-0 hidden"}`}>
+          {label}
+        </span>
       </Link>
     );
   };
@@ -71,78 +91,142 @@ export default function Navbar() {
     : "?";
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-linear-to-b from-black via-indigo-700 to-violet-800 flex flex-col z-50 shadow-2xl">
-      {/* Logo */}
-      <div className="px-5 py-5 border-b border-white/10">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center text-white font-bold text-base shadow-inner">
-            T
-          </div>
-          <span className="text-white font-bold text-lg tracking-tight">
-            TicketPlace
-          </span>
-        </Link>
+    <aside
+      className={`fixed left-0 top-0 h-screen bg-linear-to-b from-black via-indigo-700 to-violet-800 flex flex-col z-50 shadow-2xl transition-all duration-300
+        ${isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+        ${isOpen ? "w-64" : "w-64 lg:w-[72px]"}
+      `}
+    >
+      {/* Header: logo + toggle */}
+      <div className={`flex items-center border-b border-white/10 transition-all duration-300 ${isOpen ? "px-5 py-5 gap-3" : "px-0 py-5 justify-center"}`}>
+        {/* Logo — expanded: click to collapse */}
+        <button
+          onClick={onToggle}
+          className={`flex items-center min-w-0 cursor-pointer ${!isOpen ? "lg:hidden" : ""}`}
+          aria-label="Réduire le menu"
+        >
+          <Image
+            src={expandedLogo}
+            alt="e-Ticket"
+            height={106}
+            className="h-10 w-auto object-contain"
+          />
+        </button>
+
+        {/* Logo — collapsed: click to expand */}
+        {!isOpen && (
+          <button
+            onClick={onToggle}
+            className="hidden lg:flex items-center justify-center shrink-0 cursor-pointer"
+            aria-label="Agrandir le menu"
+          >
+            <Image
+              src={collapsedIcon}
+              alt="e-Ticket"
+              width={32}
+              height={32}
+              className="w-8 h-8 object-contain"
+            />
+          </button>
+        )}
+
+        {/* Mobile close button */}
+        <button
+          onClick={onMobileClose}
+          className="lg:hidden ml-auto shrink-0 flex items-center justify-center w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
+          aria-label="Fermer"
+        >
+          <Icon d={ICONS.close} />
+        </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-5 space-y-1 overflow-y-auto">
-        
+      <nav className={`flex-1 py-5 space-y-1 overflow-y-auto transition-all duration-300 ${isOpen ? "px-4" : "px-2"}`}>
         {navItem("/events", "Événements", ICONS.events)}
         {isAuthenticated && navItem("/tickets", "Mes billets", ICONS.tickets)}
         {isAuthenticated &&
           hasRole("ORGANIZER", "ADMIN") &&
           navItem("/events/new", "Créer un événement", ICONS.newEvent)}
 
-        {isAuthenticated && (hasRole("ADMIN") || hasRole("ORGANIZER")) && (
+        {isAuthenticated && (hasRole("ADMIN") || hasRole("ORGANIZER")) && isOpen && (
           <p className="text-white/90 text-xs font-semibold uppercase px-4 pt-5 mb-3">
             Dashboard
           </p>
+        )}
+        {!isOpen && isAuthenticated && (hasRole("ADMIN") || hasRole("ORGANIZER")) && (
+          <div className="border-t border-white/10 my-2" />
         )}
         {isAuthenticated &&
           hasRole("ADMIN") &&
           navItem("/dashboard/admin", "Admin", ICONS.adminDash)}
         {isAuthenticated &&
+          hasRole("ADMIN") &&
+          navItem("/dashboard/admin/subscriptions", "Abonnements", ICONS.subscription)}
+        {isAuthenticated &&
           hasRole("ORGANIZER", "ADMIN") &&
           navItem("/dashboard/organizer", "Organisateur", ICONS.organizer)}
+        {isAuthenticated &&
+          hasRole("ORGANIZER", "ADMIN") &&
+          navItem("/dashboard/organizer/subscription", "Abonnement", ICONS.subscription)}
       </nav>
 
       {/* User section */}
-      <div className="px-4 py-4 border-t border-white/10">
+      <div className={`py-4 border-t border-white/10 transition-all duration-300 ${isOpen ? "px-4" : "px-2"}`}>
         {isAuthenticated ? (
           <div className="space-y-2">
-            <div className="flex items-center gap-3 px-3 py-2 rounded-2xl bg-white/10">
-              <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-sm shrink-0">
+            <div className={`flex items-center rounded-2xl bg-white/10 transition-all duration-300 ${isOpen ? "gap-3 px-3 py-2" : "justify-center px-0 py-2"}`}>
+              <div
+                title={!isOpen ? `${user?.firstName} ${user?.lastName}` : undefined}
+                className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-sm shrink-0"
+              >
                 {initials}
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-white text-sm font-semibold truncate leading-tight">
-                  {user?.firstName} {user?.lastName}
-                </p>
-                <p className="text-white/50 text-xs truncate">{user?.role}</p>
-              </div>
+              {isOpen && (
+                <div className="min-w-0 flex-1">
+                  <p className="text-white text-sm font-semibold truncate leading-tight">
+                    {user?.firstName} {user?.lastName}
+                  </p>
+                  <p className="text-white/50 text-xs truncate">{user?.role}</p>
+                </div>
+              )}
             </div>
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/10 transition-all"
+              title={!isOpen ? "Déconnexion" : undefined}
+              className={`w-full flex items-center py-2.5 rounded-2xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/10 transition-all ${isOpen ? "gap-3 px-4" : "justify-center px-0"}`}
             >
               <Icon d={ICONS.logout} />
-              Déconnexion
+              {isOpen && <span>Déconnexion</span>}
             </button>
           </div>
         ) : (
           <div className="space-y-2">
-            <Link
-              href="/login"
-              className="w-full flex items-center justify-center px-4 py-2.5 rounded-2xl text-sm font-semibold text-white/80 hover:text-white hover:bg-white/10 transition-all"
-            >
-              Connexion
-            </Link>
-            <Link
-              href="/register"
-              className="w-full flex items-center justify-center px-4 py-2.5 rounded-2xl bg-white/20 text-sm font-semibold text-white hover:bg-white/30 transition-all"
-            >
-              S&apos;inscrire
-            </Link>
+            {isOpen ? (
+              <>
+                <Link
+                  href="/login"
+                  className="w-full flex items-center justify-center px-4 py-2.5 rounded-2xl text-sm font-semibold text-white/80 hover:text-white hover:bg-white/10 transition-all"
+                >
+                  Connexion
+                </Link>
+                <Link
+                  href="/register"
+                  className="w-full flex items-center justify-center px-4 py-2.5 rounded-2xl bg-white/20 text-sm font-semibold text-white hover:bg-white/30 transition-all"
+                >
+                  S&apos;inscrire
+                </Link>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                title="Connexion"
+                className="flex justify-center py-2.5 rounded-2xl text-white/60 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                  <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" />
+                </svg>
+              </Link>
+            )}
           </div>
         )}
       </div>

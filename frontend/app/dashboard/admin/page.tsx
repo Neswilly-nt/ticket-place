@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { dashboardService } from "@/lib/services/dashboard";
 import { DashboardResponse } from "@/types";
 import { useAuth } from "@/context/AuthContext";
@@ -104,6 +105,35 @@ export default function AdminDashboardPage() {
                 <StatCard label="Publiés" value={data.publishedEvents} />
                 <StatCard label="Terminés" value={data.completedEvents} />
                 <StatCard label="Annulés" value={data.cancelledEvents} />
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-3">
+                Actions rapides
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Link
+                  href="/dashboard/admin/subscriptions"
+                  className="flex items-center gap-4 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-5 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-sm transition-all group"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center shrink-0 group-hover:bg-indigo-200 dark:group-hover:bg-indigo-900/60 transition-colors">
+                    <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-zinc-900 dark:text-white text-sm">
+                      Gestion des abonnements
+                    </p>
+                    <p className="text-zinc-500 dark:text-zinc-400 text-xs mt-0.5">
+                      Revenus, statuts et liste des organisateurs abonnés
+                    </p>
+                  </div>
+                  <svg className="w-4 h-4 text-zinc-400 ml-auto shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />
+                  </svg>
+                </Link>
               </div>
             </section>
 

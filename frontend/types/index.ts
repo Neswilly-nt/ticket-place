@@ -2,6 +2,35 @@ export type Role = "USER" | "ORGANIZER" | "ADMIN";
 export type EventCategory = "CONCERT" | "THEATRE" | "CONFERENCE" | "SPORT" | "FESTIVAL" | "OTHER";
 export type EventStatus = "DRAFT" | "PUBLISHED" | "CANCELLED" | "COMPLETED";
 export type TicketStatus = "RESERVED" | "PAID" | "USED" | "CANCELLED";
+export type SubscriptionPlan = "MONTHLY" | "YEARLY";
+export type SubscriptionStatus = "ACTIVE" | "EXPIRED" | "CANCELLED";
+
+export interface SubscriptionResponse {
+  id: number;
+  organizerName: string;
+  organizerEmail: string;
+  plan: SubscriptionPlan;
+  status: SubscriptionStatus;
+  price: number;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+  active: boolean;
+  daysRemaining: number;
+}
+
+export interface SubscriptionStatsResponse {
+  totalSubscriptions: number;
+  activeSubscriptions: number;
+  expiredSubscriptions: number;
+  cancelledSubscriptions: number;
+  monthlyCount: number;
+  yearlyCount: number;
+  totalRevenue: number;
+  monthlyRevenue: number;
+  yearlyRevenue: number;
+  activeRevenue: number;
+}
 
 export interface ApiResponse<T> {
   success: boolean;

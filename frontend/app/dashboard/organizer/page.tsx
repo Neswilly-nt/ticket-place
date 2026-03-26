@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { dashboardService } from "@/lib/services/dashboard";
 import { eventsService } from "@/lib/services/events";
-import { EventResponse, EventStatsResponse, EventStatus } from "@/types";
+import { subscriptionService } from "@/lib/services/subscription";
+import { EventResponse, EventStatsResponse, EventStatus, SubscriptionResponse } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 
 const STATUS_LABELS: Record<EventStatus, string> = {
@@ -32,6 +33,7 @@ export default function OrganizerDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState<Record<number, ActionType | null>>({});
+  const [subscription, setSubscription] = useState<SubscriptionResponse | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -52,12 +54,22 @@ export default function OrganizerDashboardPage() {
     }
   }, []);
 
+  const fetchSubscription = useCallback(async () => {
+    try {
+      const res = await subscriptionService.getMy();
+      setSubscription(res.data);
+    } catch {
+      setSubscription(null);
+    }
+  }, []);
+
   useEffect(() => {
     if (!initialized) return;
     if (!isAuthenticated) { router.push("/login"); return; }
     if (!hasRole("ORGANIZER", "ADMIN")) { router.push("/events"); return; }
     fetchData();
-  }, [initialized, isAuthenticated, hasRole, router, fetchData]);
+    fetchSubscription();
+  }, [initialized, isAuthenticated, hasRole, router, fetchData, fetchSubscription]);
 
   const handleAction = async (eventId: number, action: ActionType) => {
     if (action === "delete" && !confirm("Supprimer cet événement ? Cette action est irréversible.")) return;
@@ -70,7 +82,12 @@ export default function OrganizerDashboardPage() {
       else if (action === "delete") await eventsService.delete(eventId);
       await fetchData();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Erreur lors de l'action");
+      const msg = err instanceof Error ? err.message : "Erreur lors de l'action";
+      if (msg.includes("abonnement")) {
+        router.push("/dashboard/organizer/subscription");
+        return;
+      }
+      setError(msg);
       setActionLoading((prev) => ({ ...prev, [eventId]: null }));
     }
   };
@@ -89,7 +106,7 @@ export default function OrganizerDashboardPage() {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
       <main className="max-w-5xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between flex-wrap gap-4 mb-8">
+        <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
               Dashboard Organisateur
@@ -105,6 +122,38 @@ export default function OrganizerDashboardPage() {
             + Créer un événement
           </Link>
         </div>
+
+        {/* Subscription banner */}
+        {subscription?.active ? (
+          <div className="mb-6 rounded-xl bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 px-4 py-3 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
+              <span>✅</span>
+              <span>
+                Abonnement <strong>{subscription.plan === "YEARLY" ? "Annuel" : "Mensuel"}</strong> actif —{" "}
+                {subscription.daysRemaining} jours restants
+              </span>
+            </div>
+            <Link
+              href="/dashboard/organizer/subscription"
+              className="text-xs text-green-700 dark:text-green-400 underline underline-offset-2 shrink-0"
+            >
+              Gérer
+            </Link>
+          </div>
+        ) : (
+          <div className="mb-6 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 px-4 py-3 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
+              <span>⚠️</span>
+              <span>Aucun abonnement actif — vous ne pouvez pas publier d&apos;événements.</span>
+            </div>
+            <Link
+              href="/dashboard/organizer/subscription"
+              className="shrink-0 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-3 py-1.5 transition-colors"
+            >
+              S&apos;abonner
+            </Link>
+          </div>
+        )}
 
         {error && (
           <div className="mb-6 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
@@ -171,7 +220,7 @@ export default function OrganizerDashboardPage() {
                           </h2>
                         </div>
                         <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                          📍 {ev.location}
+                           {ev.location}
                           {fullEvent?.eventDate && (
                             <> · 📅 {new Date(fullEvent.eventDate).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}</>
                           )}
@@ -198,7 +247,7 @@ export default function OrganizerDashboardPage() {
                           >
                             {actionLoading[ev.eventId] === "cancel"
                               ? <><span className="w-3 h-3 border-2 border-orange-400/40 border-t-orange-400 rounded-full animate-spin" />Annulation…</>
-                              : "⛔ Annuler l'événement"}
+                              : "Annuler l'événement"}
                           </button>
                         )}
                         {(status === "DRAFT" || status === "CANCELLED") && (

@@ -6,6 +6,42 @@ import { useRouter } from "next/navigation";
 import { ticketsService } from "@/lib/services/tickets";
 import { TicketResponse, TicketStatus } from "@/types";
 import { useAuth } from "@/context/AuthContext";
+import Lottie from "lottie-react";
+import successAnimation from "@/assets/animations/lottieflow-ecommerce-14-16-000000-easey.json";
+
+function Icon({ d }: { d: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="w-4 h-4 shrink-0"
+    >
+      <path d={d} />
+    </svg>
+  );
+}
+
+const ICONS = {
+  events:
+    "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
+  tickets:
+    "M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z",
+  adminDash:
+    "M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z",
+  organizer:
+    "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
+  logout:
+    "M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1",
+  newEvent:
+    "M12 4v16m8-8H4",
+  calendar:
+    "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
+};
 
 const STATUS_LABELS: Record<TicketStatus, string> = {
   RESERVED: "Réservé",
@@ -132,10 +168,15 @@ export default function TicketsPage() {
                       <h2 className="text-base font-semibold text-zinc-900 dark:text-white truncate">
                         {ticket.eventTitle}
                       </h2>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                        <span>📅 {formatDate(ticket.eventDate)}</span>
-                        <span>📍 {ticket.eventLocation}</span>
-                        <span>💰 {ticket.price} €</span>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-xs text-zinc-500 dark:text-zinc-400" style={{ filter: "brightness(0) invert(63%)" }}>
+                        <Icon d={ICONS.calendar} />{formatDate(ticket.eventDate)}
+                        <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="#e3e3e3">
+                          <path d="M536.5-503.5Q560-527 560-560t-23.5-56.5Q513-640 480-640t-56.5 23.5Q400-593 400-560t23.5 56.5Q447-480 480-480t56.5-23.5ZM480-186q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Zm0 106Q319-217 239.5-334.5T160-552q0-150 96.5-239T480-880q127 0 223.5 89T800-552q0 100-79.5 217.5T480-80Zm0-480Z"/>
+                        </svg>{ticket.eventLocation}
+                        
+                        <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="#e3e3e3">
+                          <path d="M560-440q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35ZM280-320q-33 0-56.5-23.5T200-400v-320q0-33 23.5-56.5T280-800h560q33 0 56.5 23.5T920-720v320q0 33-23.5 56.5T840-320H280Zm80-80h400q0-33 23.5-56.5T840-480v-160q-33 0-56.5-23.5T760-720H360q0 33-23.5 56.5T280-640v160q33 0 56.5 23.5T360-400Zm440 240H120q-33 0-56.5-23.5T40-240v-440h80v440h680v80ZM280-400v-320 320Z"/>
+                        </svg>{ticket.price} €
                         <span>Réservé le {formatDate(ticket.reservedAt)}</span>
                       </div>
                     </div>
@@ -154,7 +195,7 @@ export default function TicketsPage() {
                           onClick={() => setExpandedQr(qrExpanded ? null : ticket.id)}
                           className="rounded-lg bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600 px-3 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 transition-colors"
                         >
-                          {qrExpanded ? "Masquer QR" : "📲 Voir QR"}
+                          {qrExpanded ? "Masquer QR" : "Voir QR"}
                         </button>
                       )}
                       {(ticket.status === "RESERVED" || ticket.status === "PAID") && (

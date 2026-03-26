@@ -7,7 +7,9 @@ import com.insi.ticketplace.exception.AppException;
 import com.insi.ticketplace.repository.EventRepository;
 import com.insi.ticketplace.repository.UserRepository;
 import com.insi.ticketplace.service.EventService;
+import com.insi.ticketplace.service.SubscriptionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +21,8 @@ public class EventServiceImpl implements EventService {
 
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
+    @Lazy
+    private final SubscriptionService subscriptionService;
 
     @Override
     public EventResponse createEvent(EventRequest request, String organizerEmail) {
@@ -105,6 +109,12 @@ public class EventServiceImpl implements EventService {
             throw new AppException(
                     "Seul un brouillon peut être publié",
                     HttpStatus.BAD_REQUEST);
+        }
+
+        if (!subscriptionService.hasActiveSubscription(organizerEmail)) {
+            throw new AppException(
+                    "Un abonnement actif est requis pour publier un événement. Rendez-vous dans votre espace abonnement.",
+                    HttpStatus.PAYMENT_REQUIRED);
         }
 
         event.setStatus(EventStatus.PUBLISHED);
