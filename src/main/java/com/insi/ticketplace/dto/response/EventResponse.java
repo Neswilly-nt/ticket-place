@@ -29,4 +29,6 @@ public class EventResponse {
     private String organizerName;   // prénom + nom de l'organisateur
     private LocalDateTime createdAt;
     private String imageUrl;
+    private String imageUrl;
+    private LocalDateTime reservationDeadline;
 }

@@ -36,5 +36,8 @@ public class EventRequest {
     @DecimalMin(value = "0.0", message = "Le prix ne peut pas être négatif")
     private BigDecimal price;
 
+    @Future(message = "La date limite de réservation doit être dans le futur")
+    private LocalDateTime reservationDeadline;
+
     private EventCategory category = EventCategory.OTHER;
 }

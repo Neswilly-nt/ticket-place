@@ -77,6 +77,9 @@ public class Event {
 
     private LocalDateTime updatedAt;
 
+    @Column(nullable = true)
+    private LocalDateTime reservationDeadline;
+
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
