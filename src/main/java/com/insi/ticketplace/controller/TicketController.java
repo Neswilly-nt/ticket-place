@@ -70,6 +70,17 @@ public class TicketController {
                 ticketService.cancel(id, userDetails.getUsername())));
     }
 
+    @Operation(summary = "Infos publiques d'un billet via QR Code",
+            description = "Endpoint public (sans authentification) — appelé quand un QR Code est scanné")
+    @GetMapping("/public/{qrCode}")
+    public ResponseEntity<ApiResponse<TicketResponse>> getPublicInfo(
+            @PathVariable String qrCode) {
+
+        return ResponseEntity.ok(ApiResponse.success(
+                "Informations du billet",
+                ticketService.getPublicInfo(qrCode)));
+    }
+
     @Operation(summary = "Mes billets",
             description = "Historique de tous les billets de l'utilisateur connecté",
             security = @SecurityRequirement(name = "bearerAuth"))

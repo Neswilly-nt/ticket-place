@@ -175,7 +175,13 @@ export default function EventDetailPage({
               {event.description}
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            <div className={`grid gap-4 mb-8 ${
+              [event.reservationDeadline, event.paymentDeadline].filter(Boolean).length === 2
+                ? "grid-cols-1 sm:grid-cols-5"
+                : [event.reservationDeadline, event.paymentDeadline].filter(Boolean).length === 1
+                ? "grid-cols-1 sm:grid-cols-4"
+                : "grid-cols-1 sm:grid-cols-3"
+            }`}>
               <div className="rounded-xl bg-zinc-50 dark:bg-zinc-700/50 p-4">
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">Date</p>
                 <p className="text-sm font-medium text-zinc-900 dark:text-white">
@@ -194,6 +200,56 @@ export default function EventDetailPage({
                   {event.availableSeats} / {event.totalSeats}
                 </p>
               </div>
+              {event.reservationDeadline && (
+                <div className={`rounded-xl p-4 ${
+                  new Date(event.reservationDeadline) < new Date()
+                    ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
+                    : "bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
+                }`}>
+                  <p className={`text-xs mb-1 ${
+                    new Date(event.reservationDeadline) < new Date()
+                      ? "text-red-500 dark:text-red-400"
+                      : "text-amber-600 dark:text-amber-400"
+                  }`}>
+                    Limite de réservation
+                  </p>
+                  <p className={`text-sm font-medium ${
+                    new Date(event.reservationDeadline) < new Date()
+                      ? "text-red-700 dark:text-red-300"
+                      : "text-amber-800 dark:text-amber-200"
+                  }`}>
+                    {formatDate(event.reservationDeadline)}
+                  </p>
+                  {new Date(event.reservationDeadline) < new Date() && (
+                    <p className="text-xs text-red-500 dark:text-red-400 mt-1 font-semibold">Réservations fermées</p>
+                  )}
+                </div>
+              )}
+              {event.paymentDeadline && (
+                <div className={`rounded-xl p-4 ${
+                  new Date(event.paymentDeadline) < new Date()
+                    ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
+                    : "bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800"
+                }`}>
+                  <p className={`text-xs mb-1 ${
+                    new Date(event.paymentDeadline) < new Date()
+                      ? "text-red-500 dark:text-red-400"
+                      : "text-orange-600 dark:text-orange-400"
+                  }`}>
+                    Limite de paiement
+                  </p>
+                  <p className={`text-sm font-medium ${
+                    new Date(event.paymentDeadline) < new Date()
+                      ? "text-red-700 dark:text-red-300"
+                      : "text-orange-800 dark:text-orange-200"
+                  }`}>
+                    {formatDate(event.paymentDeadline)}
+                  </p>
+                  {new Date(event.paymentDeadline) < new Date() && (
+                    <p className="text-xs text-red-500 dark:text-red-400 mt-1 font-semibold">Paiement clôturé</p>
+                  )}
+                </div>
+              )}
             </div>
 
             {isPrivileged && (
@@ -251,7 +307,11 @@ export default function EventDetailPage({
               </div>
             )}
 
-            {event.availableSeats > 0 && !success ? (
+            {event.reservationDeadline && new Date(event.reservationDeadline) < new Date() && !success ? (
+              <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-4 py-3 text-sm text-amber-700 dark:text-amber-400">
+                Les réservations pour cet événement sont fermées depuis le {formatDate(event.reservationDeadline)}.
+              </div>
+            ) : event.availableSeats > 0 && !success ? (
               <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-2">
                   <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">

@@ -34,6 +34,8 @@ export default function NewEventPage() {
     totalSeats: "",
     price: "",
     category: "OTHER" as EventCategory,
+    reservationDeadline: "",
+    paymentDeadline: "",
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -63,11 +65,18 @@ export default function NewEventPage() {
       const created = await eventsService.create({
         title: form.title,
         description: form.description || undefined,
-        eventDate: new Date(form.eventDate).toISOString().slice(0, 19),
+        eventDate: form.eventDate.slice(0, 16).padEnd(19, ":00"),
+        // Keeps local time — no UTC conversion
         location: form.location,
         totalSeats: Number(form.totalSeats),
         price: Number(form.price),
         category: form.category,
+        reservationDeadline: form.reservationDeadline
+          ? form.reservationDeadline.slice(0, 16).padEnd(19, ":00")
+          : undefined,
+        paymentDeadline: form.paymentDeadline
+          ? form.paymentDeadline.slice(0, 16).padEnd(19, ":00")
+          : undefined,
       });
       if (imageFile && created.data?.id) {
         await eventsService.uploadImage(created.data.id, imageFile);
@@ -155,6 +164,42 @@ export default function NewEventPage() {
                   placeholder="Ex: Salle Pleyel, Paris"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className={LABEL_CLASS}>
+                Date limite de réservation
+                <span className="ml-1 text-zinc-400 dark:text-zinc-500 font-normal">(optionnel)</span>
+              </label>
+              <input
+                type="datetime-local"
+                value={form.reservationDeadline}
+                onChange={set("reservationDeadline")}
+                className={INPUT_CLASS}
+                min={new Date().toISOString().slice(0, 16)}
+                max={form.eventDate || undefined}
+              />
+              <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
+                Si renseignée, les réservations seront bloquées après cette date (doit être avant la date de l&apos;événement).
+              </p>
+            </div>
+
+            <div>
+              <label className={LABEL_CLASS}>
+                Date limite de paiement des réservations
+                <span className="ml-1 text-zinc-400 dark:text-zinc-500 font-normal">(optionnel)</span>
+              </label>
+              <input
+                type="datetime-local"
+                value={form.paymentDeadline}
+                onChange={set("paymentDeadline")}
+                className={INPUT_CLASS}
+                min={new Date().toISOString().slice(0, 16)}
+                max={form.eventDate || undefined}
+              />
+              <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
+                Les billets RESERVED non payés avant cette date seront annulés automatiquement et les places remises en vente.
+              </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

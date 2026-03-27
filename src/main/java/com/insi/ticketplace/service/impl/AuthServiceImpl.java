@@ -56,7 +56,6 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse login(LoginRequest request) {
         try {
-            // Spring Security vérifie email + mot de passe automatiquement
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.getEmail(),
@@ -70,6 +69,13 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException("Utilisateur introuvable", HttpStatus.NOT_FOUND));
 
+        if (user.isTwoFactorEnabled()) {
+            return AuthResponse.builder()
+                    .twoFactorRequired(true)
+                    .email(user.getEmail())
+                    .build();
+        }
+
         String token = jwtService.generateToken(user);
         return buildAuthResponse(user, token);
     }
@@ -81,6 +87,7 @@ public class AuthServiceImpl implements AuthService {
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .role(user.getRole())
+                .twoFactorEnabled(user.isTwoFactorEnabled())
                 .build();
     }
 }

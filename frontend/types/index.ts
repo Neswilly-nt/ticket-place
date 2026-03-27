@@ -4,6 +4,21 @@ export type EventStatus = "DRAFT" | "PUBLISHED" | "CANCELLED" | "COMPLETED";
 export type TicketStatus = "RESERVED" | "PAID" | "USED" | "CANCELLED";
 export type SubscriptionPlan = "MONTHLY" | "YEARLY";
 export type SubscriptionStatus = "ACTIVE" | "EXPIRED" | "CANCELLED";
+export type NotificationType =
+  | "RESERVATION_AUTO_CANCELLED"
+  | "PAYMENT_SUCCESS"
+  | "EVENT_REMINDER"
+  | "TICKET_CANCELLED";
+
+export interface NotificationResponse {
+  id: number;
+  type: NotificationType;
+  title: string;
+  message: string;
+  read: boolean;
+  relatedId?: number;
+  createdAt: string;
+}
 
 export interface SubscriptionResponse {
   id: number;
@@ -45,6 +60,8 @@ export interface AuthResponse {
   firstName: string;
   lastName: string;
   role: Role;
+  twoFactorRequired?: boolean;
+  twoFactorEnabled?: boolean;
 }
 
 export interface EventResponse {
@@ -61,19 +78,27 @@ export interface EventResponse {
   organizerName: string;
   createdAt: string;
   imageUrl?: string;
+  reservationDeadline?: string;
+  paymentDeadline?: string;
 }
 
 export interface TicketResponse {
   id: number;
+  eventId: number;
   eventTitle: string;
   eventLocation: string;
   eventDate: string;
+  eventImageUrl?: string;
+  organizerName: string;
   userName: string;
   price: number;
   status: TicketStatus;
   qrCode: string;
   qrCodeImage: string;
   reservedAt: string;
+  paidAt?: string;
+  cancelledAt?: string;
+  usedAt?: string;
 }
 
 export interface UserResponse {
@@ -108,6 +133,8 @@ export interface EventRequest {
   totalSeats: number;
   price: number;
   category?: EventCategory;
+  reservationDeadline?: string;
+  paymentDeadline?: string;
 }
 
 export interface TicketRequest {

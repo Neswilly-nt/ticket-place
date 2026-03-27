@@ -9,9 +9,12 @@ import com.insi.ticketplace.repository.EventRepository;
 import com.insi.ticketplace.repository.TicketRepository;
 import com.insi.ticketplace.repository.UserRepository;
 import com.insi.ticketplace.service.TicketService;
+import com.insi.ticketplace.service.NotificationService;
 import com.insi.ticketplace.util.QrCodeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +35,11 @@ public class TicketServiceImpl implements TicketService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final QrCodeService qrCodeService;
+    @Lazy
+    private final NotificationService notificationService;
+
+    @Value("${app.frontend.url:http://localhost:3000}")
+    private String frontendUrl;
 
     /**
      * Réserver un ou plusieurs billets.
@@ -82,19 +90,7 @@ public class TicketServiceImpl implements TicketService {
                     HttpStatus.BAD_REQUEST);
         }
 
-        // 5. Vérifier que l'user n'a pas déjà un billet actif
-        boolean alreadyBooked = ticketRepository
-                .existsByUserIdAndEventIdAndStatusNot(
-                        user.getId(), event.getId(),
-                        TicketStatus.CANCELLED);
-
-        if (alreadyBooked) {
-            throw new AppException(
-                    "Vous avez déjà réservé un billet pour cet événement",
-                    HttpStatus.CONFLICT);
-        }
-
-        // 6. Créer les billets
+        // 5. Créer les billets
         List<Ticket> tickets = new ArrayList<>();
 
         for (int i = 0; i < request.getQuantity(); i++) {
@@ -133,10 +129,29 @@ public class TicketServiceImpl implements TicketService {
                     HttpStatus.BAD_REQUEST);
         }
 
+        Event event = ticket.getEvent();
+        if (event.getPaymentDeadline() != null &&
+                LocalDateTime.now().isAfter(event.getPaymentDeadline())) {
+            throw new AppException(
+                    "La date limite de paiement est dépassée. Votre réservation sera annulée automatiquement.",
+                    HttpStatus.BAD_REQUEST);
+        }
+
         ticket.setStatus(TicketStatus.PAID);
         ticket.setPaidAt(LocalDateTime.now());
+        Ticket saved = ticketRepository.save(ticket);
 
-        return toResponse(ticketRepository.save(ticket));
+        notificationService.send(
+                ticket.getUser(),
+                NotificationType.PAYMENT_SUCCESS,
+                "Paiement confirmé ",
+                "Votre billet pour \"" + event.getTitle() + "\" le "
+                        + event.getEventDate().format(
+                            java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy à HH:mm"))
+                        + " a bien été payé. Bon événement !",
+                ticket.getId());
+
+        return toResponse(saved);
     }
 
     @Override
@@ -157,14 +172,22 @@ public class TicketServiceImpl implements TicketService {
         }
 
         // Remettre la place disponible
-        Event event = ticket.getEvent();
-        event.setAvailableSeats(event.getAvailableSeats() + 1);
-        eventRepository.save(event);
+        Event cancelEvent = ticket.getEvent();
+        cancelEvent.setAvailableSeats(cancelEvent.getAvailableSeats() + 1);
+        eventRepository.save(cancelEvent);
 
         ticket.setStatus(TicketStatus.CANCELLED);
         ticket.setCancelledAt(LocalDateTime.now());
+        Ticket cancelledTicket = ticketRepository.save(ticket);
 
-        return toResponse(ticketRepository.save(ticket));
+        notificationService.send(
+                ticket.getUser(),
+                NotificationType.TICKET_CANCELLED,
+                "Billet annulé",
+                "Votre billet pour \"" + cancelEvent.getTitle() + "\" a été annulé.",
+                ticket.getId());
+
+        return toResponse(cancelledTicket);
     }
 
     /**
@@ -201,7 +224,7 @@ public class TicketServiceImpl implements TicketService {
         ticket.setStatus(TicketStatus.USED);
         ticket.setUsedAt(LocalDateTime.now());
 
-        log.info("🎫 Billet {} scanné et validé pour '{}'",
+        log.info(" Billet {} scanné et validé pour '{}'",
                 qrCode, ticket.getEvent().getTitle());
 
         return toResponse(ticketRepository.save(ticket));
@@ -234,6 +257,14 @@ public class TicketServiceImpl implements TicketService {
                 .stream().map(this::toResponse).toList();
     }
 
+    @Override
+    public TicketResponse getPublicInfo(String qrCode) {
+        Ticket ticket = ticketRepository.findByQrCode(qrCode)
+                .orElseThrow(() -> new AppException(
+                        "QR Code invalide", HttpStatus.NOT_FOUND));
+        return toResponse(ticket);
+    }
+
     // ===== Méthodes privées =====
 
     private Ticket getTicketAndCheckOwnership(Long ticketId,
@@ -257,19 +288,25 @@ public class TicketServiceImpl implements TicketService {
         // Générer l'image QR Code seulement si le billet est PAID
         if (ticket.getStatus() == TicketStatus.PAID) {
             try {
+                String verifyUrl = frontendUrl + "/tickets/verify/" + ticket.getQrCode();
                 qrCodeImage = qrCodeService
-                        .generateQrCodeImage(ticket.getQrCode(), 200, 200);
+                        .generateQrCodeImage(verifyUrl, 250, 250);
             } catch (WriterException | IOException e) {
                 log.warn("Impossible de générer l'image QR : {}",
                         e.getMessage());
             }
         }
 
+        Event ev = ticket.getEvent();
         return TicketResponse.builder()
                 .id(ticket.getId())
-                .eventTitle(ticket.getEvent().getTitle())
-                .eventLocation(ticket.getEvent().getLocation())
-                .eventDate(ticket.getEvent().getEventDate())
+                .eventId(ev.getId())
+                .eventTitle(ev.getTitle())
+                .eventLocation(ev.getLocation())
+                .eventDate(ev.getEventDate())
+                .eventImageUrl(ev.getImageUrl())
+                .organizerName(ev.getOrganizer().getFirstName()
+                        + " " + ev.getOrganizer().getLastName())
                 .userName(ticket.getUser().getFirstName()
                         + " " + ticket.getUser().getLastName())
                 .price(ticket.getPrice())
@@ -277,6 +314,9 @@ public class TicketServiceImpl implements TicketService {
                 .qrCode(ticket.getQrCode())
                 .qrCodeImage(qrCodeImage)
                 .reservedAt(ticket.getReservedAt())
+                .paidAt(ticket.getPaidAt())
+                .cancelledAt(ticket.getCancelledAt())
+                .usedAt(ticket.getUsedAt())
                 .build();
     }
     /**

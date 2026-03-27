@@ -46,4 +46,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
      * Spring génère : SELECT COUNT(*) FROM events WHERE status = ?
      */
     long countByStatus(EventStatus status);
+
+    List<Event> findByStatusAndEventDateBetweenAndReminderSentFalse(
+            EventStatus status, LocalDateTime start, LocalDateTime end);
 }

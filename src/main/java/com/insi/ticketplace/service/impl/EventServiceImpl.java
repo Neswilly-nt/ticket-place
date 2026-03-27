@@ -45,6 +45,7 @@ public class EventServiceImpl implements EventService {
                 .status(EventStatus.DRAFT)               // toujours DRAFT à la création
                 .organizer(organizer)
                 .reservationDeadline(request.getReservationDeadline())
+                .paymentDeadline(request.getPaymentDeadline())
                 .build();
 
         return toResponse(eventRepository.save(event));
@@ -72,6 +73,7 @@ public class EventServiceImpl implements EventService {
         event.setPrice(request.getPrice());
         event.setCategory(request.getCategory());
         event.setReservationDeadline(request.getReservationDeadline());
+        event.setPaymentDeadline(request.getPaymentDeadline());
 
         return toResponse(eventRepository.save(event));
     }
@@ -205,6 +207,7 @@ public class EventServiceImpl implements EventService {
                 .createdAt(event.getCreatedAt())
                 .imageUrl(event.getImageUrl())
                 .reservationDeadline(event.getReservationDeadline())
+                .paymentDeadline(event.getPaymentDeadline())
                 .build();
     }
 

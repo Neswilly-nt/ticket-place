@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import ThemeToggle from "./ThemeToggle";
 
-const SIDEBAR_ROUTES = ["/events", "/tickets", "/dashboard"];
+const SIDEBAR_ROUTES = ["/events", "/tickets", "/dashboard", "/notifications", "/settings"];
 
 export default function SidebarWrapper({
   children,
@@ -58,7 +58,7 @@ export default function SidebarWrapper({
 
       <div
         className={`flex-1 min-w-0 transition-all duration-300 ${
-          isOpen ? "lg:ml-64" : "lg:ml-[72px]"
+          isOpen ? "lg:ml-64" : "lg:ml-18"
         }`}
       >
         {children}

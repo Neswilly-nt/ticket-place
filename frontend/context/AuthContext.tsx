@@ -15,6 +15,7 @@ interface AuthUser {
   firstName: string;
   lastName: string;
   role: Role;
+  twoFactorEnabled: boolean;
 }
 
 interface AuthContextType {
@@ -24,6 +25,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   initialized: boolean;
   hasRole: (...roles: Role[]) => boolean;
+  refreshTwoFactor: (enabled: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -51,11 +53,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       firstName: data.firstName,
       lastName: data.lastName,
       role: data.role,
+      twoFactorEnabled: !!data.twoFactorEnabled,
     };
     localStorage.setItem("token", data.token);
     localStorage.setItem("auth_user", JSON.stringify(authUser));
     document.cookie = `token=${data.token}; path=/; max-age=86400; SameSite=Lax`;
     setUser(authUser);
+  };
+
+  const refreshTwoFactor = (enabled: boolean) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, twoFactorEnabled: enabled };
+      localStorage.setItem("auth_user", JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const logout = () => {
@@ -71,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, login, logout, isAuthenticated: !!user, initialized, hasRole }}
+      value={{ user, login, logout, isAuthenticated: !!user, initialized, hasRole, refreshTwoFactor }}
     >
       {children}
     </AuthContext.Provider>

@@ -168,16 +168,21 @@ export default function TicketsPage() {
                       <h2 className="text-base font-semibold text-zinc-900 dark:text-white truncate">
                         {ticket.eventTitle}
                       </h2>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-xs text-zinc-500 dark:text-zinc-400" style={{ filter: "brightness(0) invert(63%)" }}>
-                        <Icon d={ICONS.calendar} />{formatDate(ticket.eventDate)}
-                        <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="#e3e3e3">
-                          <path d="M536.5-503.5Q560-527 560-560t-23.5-56.5Q513-640 480-640t-56.5 23.5Q400-593 400-560t23.5 56.5Q447-480 480-480t56.5-23.5ZM480-186q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Zm0 106Q319-217 239.5-334.5T160-552q0-150 96.5-239T480-880q127 0 223.5 89T800-552q0 100-79.5 217.5T480-80Zm0-480Z"/>
-                        </svg>{ticket.eventLocation}
-                        
-                        <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="#e3e3e3">
-                          <path d="M560-440q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35ZM280-320q-33 0-56.5-23.5T200-400v-320q0-33 23.5-56.5T280-800h560q33 0 56.5 23.5T920-720v320q0 33-23.5 56.5T840-320H280Zm80-80h400q0-33 23.5-56.5T840-480v-160q-33 0-56.5-23.5T760-720H360q0 33-23.5 56.5T280-640v160q33 0 56.5 23.5T360-400Zm440 240H120q-33 0-56.5-23.5T40-240v-440h80v440h680v80ZM280-400v-320 320Z"/>
-                        </svg>{ticket.price} €
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                        <span className="flex items-center gap-1">
+                          <Icon d={ICONS.calendar} />
+                          {formatDate(ticket.eventDate)}
+                        </span>
+                        <span>{ticket.eventLocation}</span>
+                        <span className="font-medium">{ticket.price} €</span>
+                        {ticket.organizerName && (
+                          <span className="text-zinc-400 dark:text-zinc-500">Par {ticket.organizerName}</span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-x-3 mt-1 text-xs text-zinc-400 dark:text-zinc-500">
                         <span>Réservé le {formatDate(ticket.reservedAt)}</span>
+                        {ticket.paidAt && <span>· Payé le {formatDate(ticket.paidAt)}</span>}
+                        {ticket.cancelledAt && <span>· Annulé le {formatDate(ticket.cancelledAt)}</span>}
                       </div>
                     </div>
 
@@ -213,22 +218,63 @@ export default function TicketsPage() {
                   </div>
 
                   {showQr && qrExpanded && (
-                    <div className="mt-5 pt-5 border-t border-zinc-100 dark:border-zinc-700 flex flex-col sm:flex-row items-center gap-5">
-                      <img
-                        src={`data:image/png;base64,${ticket.qrCodeImage}`}
-                        alt="QR Code billet"
-                        className="w-40 h-40 rounded-xl border-2 border-green-200 dark:border-green-700 shadow-sm"
-                      />
-                      <div>
-                        <p className="text-sm font-semibold text-zinc-900 dark:text-white mb-1">
-                          ✅ Billet valide — présentez ce QR à l&apos;entrée
-                        </p>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">
-                          Code de référence :
-                        </p>
-                        <p className="font-mono text-sm bg-zinc-100 dark:bg-zinc-700 px-3 py-1.5 rounded-lg text-zinc-800 dark:text-zinc-200 break-all">
-                          {ticket.qrCode}
-                        </p>
+                    <div className="mt-5 pt-5 border-t border-zinc-100 dark:border-zinc-700">
+                      <div className="flex flex-col sm:flex-row gap-5">
+                        <div className="flex flex-col items-center gap-2">
+                          <img
+                            src={`data:image/png;base64,${ticket.qrCodeImage}`}
+                            alt="QR Code billet"
+                            className="w-44 h-44 rounded-xl border-2 border-green-200 dark:border-green-700 shadow-sm"
+                          />
+                          <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono text-center break-all max-w-[176px]">
+                            {ticket.qrCode}
+                          </p>
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <p className="text-sm font-bold text-green-600 dark:text-green-400">✅ Billet valide — à présenter à l&apos;entrée</p>
+                          <div className="rounded-xl bg-zinc-50 dark:bg-zinc-700/50 p-3 space-y-1.5 text-xs">
+                            <div className="flex gap-2">
+                              <span className="text-zinc-400 w-24 shrink-0">Événement</span>
+                              <span className="font-semibold text-zinc-900 dark:text-white">{ticket.eventTitle}</span>
+                            </div>
+                            <div className="flex gap-2">
+                              <span className="text-zinc-400 w-24 shrink-0">Date</span>
+                              <span className="text-zinc-700 dark:text-zinc-300">{formatDate(ticket.eventDate)}</span>
+                            </div>
+                            <div className="flex gap-2">
+                              <span className="text-zinc-400 w-24 shrink-0">Lieu</span>
+                              <span className="text-zinc-700 dark:text-zinc-300">{ticket.eventLocation}</span>
+                            </div>
+                            <div className="flex gap-2">
+                              <span className="text-zinc-400 w-24 shrink-0">Titulaire</span>
+                              <span className="font-semibold text-zinc-900 dark:text-white">{ticket.userName}</span>
+                            </div>
+                            {ticket.organizerName && (
+                              <div className="flex gap-2">
+                                <span className="text-zinc-400 w-24 shrink-0">Organisateur</span>
+                                <span className="text-zinc-700 dark:text-zinc-300">{ticket.organizerName}</span>
+                              </div>
+                            )}
+                            <div className="flex gap-2">
+                              <span className="text-zinc-400 w-24 shrink-0">Prix</span>
+                              <span className="text-zinc-700 dark:text-zinc-300">{ticket.price} €</span>
+                            </div>
+                            <div className="flex gap-2">
+                              <span className="text-zinc-400 w-24 shrink-0">Statut</span>
+                              <span className={`font-semibold px-2 py-0.5 rounded-full ${STATUS_COLORS[ticket.status]}`}>{STATUS_LABELS[ticket.status]}</span>
+                            </div>
+                            {ticket.paidAt && (
+                              <div className="flex gap-2">
+                                <span className="text-zinc-400 w-24 shrink-0">Payé le</span>
+                                <span className="text-zinc-700 dark:text-zinc-300">{formatDate(ticket.paidAt)}</span>
+                              </div>
+                            )}
+                            <div className="flex gap-2">
+                              <span className="text-zinc-400 w-24 shrink-0">Réf. billet</span>
+                              <span className="font-mono text-zinc-600 dark:text-zinc-400 break-all">{ticket.id}</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}

@@ -72,4 +72,16 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
     // Compter les billets vendus pour un événement
     long countByEventIdAndStatus(Long eventId, TicketStatus status);
+
+    @Query("SELECT t FROM Ticket t JOIN FETCH t.user JOIN FETCH t.event e " +
+            "WHERE t.status = 'RESERVED' " +
+            "AND e.paymentDeadline IS NOT NULL " +
+            "AND e.paymentDeadline < :now")
+    List<Ticket> findExpiredUnpaidReservations(
+            @org.springframework.data.repository.query.Param("now") java.time.LocalDateTime now);
+
+    @Query("SELECT DISTINCT t FROM Ticket t JOIN FETCH t.user " +
+            "WHERE t.event.id = :eventId AND t.status IN ('PAID', 'USED')")
+    List<Ticket> findPaidTicketHoldersByEvent(
+            @org.springframework.data.repository.query.Param("eventId") Long eventId);
 }

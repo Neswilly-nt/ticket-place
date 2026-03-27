@@ -80,6 +80,13 @@ public class Event {
     @Column(nullable = true)
     private LocalDateTime reservationDeadline;
 
+    @Column(nullable = true)
+    private LocalDateTime paymentDeadline;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean reminderSent = false;
+
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();

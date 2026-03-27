@@ -39,5 +39,7 @@ public class EventRequest {
     @Future(message = "La date limite de réservation doit être dans le futur")
     private LocalDateTime reservationDeadline;
 
+    private LocalDateTime paymentDeadline;
+
     private EventCategory category = EventCategory.OTHER;
 }

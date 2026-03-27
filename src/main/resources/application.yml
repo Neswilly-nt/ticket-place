@@ -41,6 +41,8 @@ app:
     expiration: 86400000   # 24 heures en millisecondes
   upload:
     dir: uploads
+  frontend:
+    url: ${FRONTEND_URL:http://localhost:3000}
 
 spring.servlet.multipart:
   max-file-size: 10MB

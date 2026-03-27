@@ -6,6 +6,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import collapsedIcon from "@/assets/images/Frame 4.png";
 import expandedLogo from "@/assets/images/Frame 4 (1).png";
+import NotificationBell from "@/components/NotificationBell";
+import { useNotifications } from "@/hooks/useNotifications";
 
 function Icon({ d }: { d: string }) {
   return (
@@ -39,6 +41,10 @@ const ICONS = {
     "M12 4v16m8-8H4",
   subscription:
     "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z",
+  notifications:
+    "M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9",
+  shield:
+    "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
   chevronLeft: "M15 18l-6-6 6-6",
   chevronRight: "M9 18l6-6-6-6",
   close: "M6 18L18 6M6 6l12 12",
@@ -90,11 +96,14 @@ export default function Navbar({ isOpen, isMobileOpen, onToggle, onMobileClose }
     ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase()
     : "?";
 
+  const { notifications, unreadCount, markRead, markAllRead } =
+    useNotifications(isAuthenticated);
+
   return (
     <aside
       className={`fixed left-0 top-0 h-screen bg-linear-to-b from-black via-indigo-700 to-violet-800 flex flex-col z-50 shadow-2xl transition-all duration-300
         ${isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
-        ${isOpen ? "w-64" : "w-64 lg:w-[72px]"}
+        ${isOpen ? "w-64" : "w-64 lg:w-18"}
       `}
     >
       {/* Header: logo + toggle */}
@@ -144,6 +153,32 @@ export default function Navbar({ isOpen, isMobileOpen, onToggle, onMobileClose }
       <nav className={`flex-1 py-5 space-y-1 overflow-y-auto transition-all duration-300 ${isOpen ? "px-4" : "px-2"}`}>
         {navItem("/events", "Événements", ICONS.events)}
         {isAuthenticated && navItem("/tickets", "Mes billets", ICONS.tickets)}
+        {isAuthenticated && (
+          <Link
+            href="/notifications"
+            title={!isOpen ? "Notifications" : undefined}
+            className={`relative flex items-center gap-3 py-3 rounded-2xl text-sm font-medium transition-all duration-150 overflow-hidden ${
+              isOpen ? "px-4" : "px-0 justify-center"
+            } ${
+              pathname === "/notifications"
+                ? "bg-white text-indigo-700 shadow-md"
+                : "text-white/70 hover:text-white hover:bg-white/10"
+            }`}
+          >
+            <span className={`relative shrink-0 ${pathname === "/notifications" ? "text-indigo-600" : "text-current"}`}>
+              <Icon d={ICONS.notifications} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-4 h-4 px-0.5 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </span>
+            <span className={`whitespace-nowrap transition-all duration-300 ${isOpen ? "opacity-100 w-auto" : "opacity-0 w-0 hidden"}`}>
+              Notifications
+            
+            </span>
+          </Link>
+        )}
         {isAuthenticated &&
           hasRole("ORGANIZER", "ADMIN") &&
           navItem("/events/new", "Créer un événement", ICONS.newEvent)}
@@ -174,6 +209,17 @@ export default function Navbar({ isOpen, isMobileOpen, onToggle, onMobileClose }
       <div className={`py-4 border-t border-white/10 transition-all duration-300 ${isOpen ? "px-4" : "px-2"}`}>
         {isAuthenticated ? (
           <div className="space-y-2">
+            {isAuthenticated && (
+              <div className={`flex ${isOpen ? "justify-start px-1" : "justify-center"} pb-1`}>
+                <NotificationBell
+                  notifications={notifications}
+                  unreadCount={unreadCount}
+                  onMarkRead={markRead}
+                  onMarkAllRead={markAllRead}
+                  isOpen={isOpen}
+                />
+              </div>
+            )}
             <div className={`flex items-center rounded-2xl bg-white/10 transition-all duration-300 ${isOpen ? "gap-3 px-3 py-2" : "justify-center px-0 py-2"}`}>
               <div
                 title={!isOpen ? `${user?.firstName} ${user?.lastName}` : undefined}
@@ -190,6 +236,7 @@ export default function Navbar({ isOpen, isMobileOpen, onToggle, onMobileClose }
                 </div>
               )}
             </div>
+            {navItem("/settings/security", "Sécurité du compte", ICONS.shield)}
             <button
               onClick={handleLogout}
               title={!isOpen ? "Déconnexion" : undefined}
