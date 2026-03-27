@@ -1,33 +1,52 @@
 package com.insi.ticketplace.controller;
 
-import com.insi.ticketplace.dto.request.RegistrationRequest;
+import com.insi.ticketplace.dto.request.LoginRequest;
+import com.insi.ticketplace.dto.request.RegisterRequest;
 import com.insi.ticketplace.dto.response.ApiResponse;
-import com.insi.ticketplace.dto.response.UserResponse;
-import com.insi.ticketplace.service.UserService;
+import com.insi.ticketplace.dto.response.AuthResponse;
+import com.insi.ticketplace.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Authentification",
+        description = "Inscription et connexion des utilisateurs")
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class AuthController {
 
-    private final UserService userService;
+    private final AuthService authService;
 
+    @Operation(
+            summary = "Inscrire un nouvel utilisateur",
+            description = "Crée un compte et retourne un token JWT"
+    )
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<UserResponse>> registerUser(@Valid @RequestBody RegistrationRequest registrationRequest) {
-        UserResponse userResponse = userService.registerUser(registrationRequest);
-        
-        ApiResponse<UserResponse> response = ApiResponse.<UserResponse>builder()
-                .success(true)
-                .message("Utilisateur enregistré avec succès")
-                .data(userResponse)
-                .build();
-                
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public ResponseEntity<ApiResponse<AuthResponse>> register(
+            @Valid @RequestBody RegisterRequest request) {
+
+        AuthResponse authResponse = authService.register(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Inscription réussie", authResponse));
+    }
+
+    @Operation(
+            summary = "Se connecter",
+            description = "Retourne un token JWT valide 24h"
+    )
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<AuthResponse>> login(
+            @Valid @RequestBody LoginRequest request) {
+
+        AuthResponse authResponse = authService.login(request);
+
+        return ResponseEntity.ok(ApiResponse.success("Connexion réussie", authResponse));
     }
 }

@@ -7,14 +7,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class AppConfig {
-
-    /**
-     * Bean pour encoder les mots de passe avec BCrypt.
-     * BCrypt est un algorithme de hachage sécurisé, adapté aux mots de passe.
-     * On le déclare ici pour l'injecter partout où on en a besoin.
-     */
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    // Ce fichier peut accueillir d'autres beans généraux plus tard
+    // (ex: ModelMapper, ObjectMapper custom, etc.)
 }

@@ -4,9 +4,9 @@ spring:
 
   # Configuration BDD
   datasource:
-    url: jdbc:mysql://localhost:3306/ticketplace_db
-    username: root
-    password:
+    url: jdbc:mysql://localhost:3306/ticket_place?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -15,13 +15,15 @@ spring:
     show-sql: true      # Affiche les requêtes SQL en console (dev)
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
 
   # Jackson : format des dates en JSON
   jackson:
     serialization:
       write-dates-as-timestamps: false
+    deserialization:
+        fail-on-unknown-properties: false
+        adjust-dates-to-context-time-zone: false
     time-zone: UTC
 
 # Configuration du serveur
@@ -37,9 +39,27 @@ app:
   jwt:
     secret: ${JWT_SECRET:ticket-place-secret-key-must-be-at-least-32-chars-long}
     expiration: 86400000   # 24 heures en millisecondes
+  upload:
+    dir: uploads
+  frontend:
+    url: ${FRONTEND_URL:http://localhost:3000}
+
+spring.servlet.multipart:
+  max-file-size: 10MB
+  max-request-size: 10MB
 
 # Logs
 logging:
   level:
     com.insi.ticketplace: DEBUG
     org.springframework.security: DEBUG
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html        # URL d'accès
+    tags-sorter: alpha            # Trie les groupes alphabétiquement
+    operations-sorter: alpha      # Trie les endpoints alphabétiquement
+    display-request-duration: true # Affiche le temps de réponse
+  api-docs:
+    path: /v3/api-docs            # URL du JSON OpenAPI brut
+  show-actuator: false
