@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
         port: "8080",
         pathname: "/api/uploads/**",
       },
+      {
+        protocol: "https",
+        hostname: "*.up.railway.app",
+        pathname: "/api/uploads/**",
+      },
     ],
   },
 };

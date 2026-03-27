@@ -1,0 +1,46 @@
+# Git
+.git
+.gitignore
+
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# IDE
+.idea
+*.iws
+*.iml
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+*.log
+logs/
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Documentation
+README.md
+API_DOCUMENTATION.md
+DATABASE.md
+
+# Frontend build files (in root)
+frontend/.next
+frontend/node_modules
+frontend/out
+frontend/build
